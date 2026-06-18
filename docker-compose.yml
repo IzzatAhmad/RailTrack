@@ -8,6 +8,7 @@ services:
     environment:
       MYSQL_DATABASE: railtrack
       MYSQL_ROOT_PASSWORD: rootpassword
+      TZ: Asia/Kuala_Lumpur
     ports:
       - "3306:3306"
     volumes:
@@ -28,6 +29,7 @@ services:
       - DB_USER=root
       - DB_PASSWORD=rootpassword
       - RAILTRACK_WORK_DIR=/var/railtrack
+      - TZ=Asia/Kuala_Lumpur
     volumes:
       # Mount the Host's Docker socket so the containerized Tomcat can control the host Docker engine
       - /var/run/docker.sock:/var/run/docker.sock
