@@ -24,10 +24,10 @@
     String loginError = null;
     if ("invalid".equals(errorParam)) {
         loginError = "Invalid username or password.";
-    } else if ("captcha".equals(errorParam)) {
-        loginError = "Invalid CAPTCHA answer. Please try again.";
     } else if ("system".equals(errorParam)) {
         loginError = "A system error occurred. Please try again.";
+    } else if ("recaptcha".equals(errorParam)) {
+        loginError = "Please verify that you are not a robot.";
     } else if (errorParam != null && !errorParam.isEmpty()) {
         loginError = errorParam; // decoded message from IllegalArgumentException
     }
@@ -47,6 +47,7 @@
         <!-- Apple Touch Icon (iOS) -->
         <link rel="apple-touch-icon" href="/RailTrack/img/roadway.png">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
         <link rel="preconnect" href="https://fonts.googleapis.com"/>
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -589,7 +590,6 @@
                 }
             }
         </style>
-        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     </head>
     <body>
 
@@ -918,8 +918,8 @@
                             </button>
                         </div>
                     </div>
-                    <div class="mb-4">
-                        <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" style="transform:scale(0.85); transform-origin:0 0;"></div>
+                    <div class="mb-4 d-flex justify-content-center">
+                        <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
                     </div>
                     <button type="submit" class="btn-login">
                         <i class="bi bi-box-arrow-in-right me-1"></i>Sign In

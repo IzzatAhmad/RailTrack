@@ -143,41 +143,6 @@ public class TerminalExecutor {
         return new Result(process.exitValue(), stdout, stderr);
     }
 
-    /**
-     * Runs a command exactly as specified without passing it through a shell.
-     * Prevents OS command injection.
-     */
-    public static Result executeCommand(String... command) throws IOException, InterruptedException {
-        return executeCommand(DEFAULT_TIMEOUT_MINUTES, command);
-    }
-
-    public static Result executeCommand(int timeoutMinutes, String... command)
-            throws IOException, InterruptedException {
-
-        ProcessBuilder pb = new ProcessBuilder(command);
-        pb.redirectErrorStream(false);
-        Process process = pb.start();
-
-        Future<String> stdoutFuture = captureStream(process.getInputStream());
-        Future<String> stderrFuture = captureStream(process.getErrorStream());
-
-        boolean finished = process.waitFor(timeoutMinutes, TimeUnit.MINUTES);
-        if (!finished) {
-            process.destroyForcibly();
-            return new Result(-1, "", "Command timed out after " + timeoutMinutes + " minutes.");
-        }
-
-        String stdout = "", stderr = "";
-        try {
-            stdout = stdoutFuture.get(5, TimeUnit.SECONDS);
-            stderr = stderrFuture.get(5, TimeUnit.SECONDS);
-        } catch (ExecutionException | TimeoutException e) {
-            stderr = "Output read error: " + e.getMessage();
-        }
-
-        return new Result(process.exitValue(), stdout, stderr);
-    }
-
     // ── Non-blocking streaming ────────────────────────────────────────────────
     /**
      * Starts a command in the background and streams each line to the provided

@@ -68,30 +68,17 @@ public class DockerService {
             silentRemoveContainer(containerName(pid));
 
             // 2. Clone or pull
-            java.io.File gitDir = new java.io.File(repoDir, ".git");
-            Result cloneResult;
-            if (gitDir.exists() && gitDir.isDirectory()) {
-                Result fetchResult = TerminalExecutor.executeCommand("git", "-C", repoDir, "fetch", "origin");
-                Result checkoutResult = TerminalExecutor.executeCommand("git", "-C", repoDir, "checkout", branch);
-                Result pullResult = TerminalExecutor.executeCommand("git", "-C", repoDir, "pull", "origin", branch);
-                
-                String combined = fetchResult.combined() + "\n" + checkoutResult.combined() + "\n" + pullResult.combined();
-                cloneResult = new Result(
-                        pullResult.exitCode != 0 ? pullResult.exitCode : (checkoutResult.exitCode != 0 ? checkoutResult.exitCode : fetchResult.exitCode),
-                        combined, ""
-                );
-            } else {
-                cloneResult = TerminalExecutor.executeCommand("git", "clone", "--branch", branch, "--depth", "1", project.getRepoUrl(), repoDir);
-            }
-
+            String cloneCmd = buildCloneCommand(project.getRepoUrl(), branch, repoDir);
+            Result cloneResult = TerminalExecutor.executeShell(cloneCmd);
             if (!cloneResult.success()) {
-                throw new DockerException(pid, "git clone/pull",
+                throw new DockerException(pid, cloneCmd,
                         "Repository clone/pull failed:\n" + cloneResult.combined());
             }
 
             // 3. Build image (remove old image first to avoid cache issues)
-            TerminalExecutor.executeCommand("docker", "rmi", "-f", imageTag);
-            Result buildResult = TerminalExecutor.executeCommand(20, "docker", "build", "-t", imageTag, repoDir);
+            TerminalExecutor.executeShell("docker rmi -f " + imageTag);
+            String buildCmd = "docker build -t " + imageTag + " \"" + repoDir + "\"";
+            Result buildResult = TerminalExecutor.executeShell(buildCmd, 20); // use executeShell
 
             String fullLog = cloneResult.combined() + "\n\n--- BUILD ---\n" + buildResult.combined();
 
@@ -100,7 +87,7 @@ public class DockerService {
                 projectDAO.updateDockerStatus(pid, "error");
                 deploymentLogDAO.log(pid, performedById,
                         DeploymentLog.Action.BUILD, "failed", "Exit: " + buildResult.exitCode);
-                throw new DockerException(pid, "docker build",
+                throw new DockerException(pid, buildCmd,
                         "Docker build failed:\n" + buildResult.combined());
             }
 
@@ -347,8 +334,22 @@ public class DockerService {
     }
 
     /**
-     * Removed buildCloneCommand due to security concerns (OS Command Injection).
+     * Clones a repo if the directory doesn't exist, or pulls latest if it does.
      */
+    private String buildCloneCommand(String repoUrl, String branch, String repoDir) {
+        String repoDirUnix = repoDir.replace("\\", "/");
+
+        String bashScript = "if [ -d \"" + repoDirUnix + "/.git\" ]; then "
+                + "git -C \"" + repoDirUnix + "\" fetch origin && "
+                + "git -C \"" + repoDirUnix + "\" checkout " + branch + " && "
+                + "git -C \"" + repoDirUnix + "\" pull origin " + branch + "; "
+                + "else "
+                + "git clone --branch " + branch + " --depth 1 "
+                + repoUrl + " \"" + repoDirUnix + "\"; "
+                + "fi";
+
+        return bashScript;
+    }
 
     /**
      * Finds a free port in range 32000–33000 by checking what Docker is already

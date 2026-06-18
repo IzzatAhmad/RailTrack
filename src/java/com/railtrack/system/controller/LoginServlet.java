@@ -46,44 +46,11 @@ public class LoginServlet extends HttpServlet {
         String password = req.getParameter("password");
         String recaptchaResponse = req.getParameter("g-recaptcha-response");
 
-        // Google reCAPTCHA Validation
-        if (recaptchaResponse == null || recaptchaResponse.isEmpty()) {
-            resp.sendRedirect(req.getContextPath() + "/?error=captcha");
+        if (!verifyRecaptcha(recaptchaResponse)) {
+            resp.sendRedirect(req.getContextPath() + "/?error=recaptcha");
             return;
         }
-
-        try {
-            String secret = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe";
-            java.net.URL url = new java.net.URL("https://www.google.com/recaptcha/api/siteverify");
-            java.net.HttpURLConnection con = (java.net.HttpURLConnection) url.openConnection();
-            con.setRequestMethod("POST");
-            con.setDoOutput(true);
-
-            String postParams = "secret=" + secret + "&response=" + recaptchaResponse;
-            java.io.OutputStream os = con.getOutputStream();
-            os.write(postParams.getBytes());
-            os.flush();
-            os.close();
-
-            java.io.BufferedReader in = new java.io.BufferedReader(new java.io.InputStreamReader(con.getInputStream()));
-            String inputLine;
-            StringBuilder responseStr = new StringBuilder();
-            while ((inputLine = in.readLine()) != null) {
-                responseStr.append(inputLine);
-            }
-            in.close();
-
-            if (!responseStr.toString().contains("\"success\": true")) {
-                resp.sendRedirect(req.getContextPath() + "/?error=captcha");
-                return;
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            resp.sendRedirect(req.getContextPath() + "/?error=system");
-            return;
-        }
-
+ 
         try {
             User user = authService.login(req, username, password);
  
@@ -106,6 +73,41 @@ public class LoginServlet extends HttpServlet {
     }
  
     // ── Helper ────────────────────────────────────────────────────────────────
+ 
+    private boolean verifyRecaptcha(String recaptchaResponse) {
+        if (recaptchaResponse == null || recaptchaResponse.isEmpty()) {
+            return false;
+        }
+        try {
+            // Read from environment variable, fallback to test key if not set
+            String secret = System.getenv("RECAPTCHA_SECRET");
+            if (secret == null || secret.isEmpty()) {
+                secret = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"; // Public test key
+            }
+            java.net.URL url = new java.net.URL("https://www.google.com/recaptcha/api/siteverify");
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            String postParams = "secret=" + secret + "&response=" + recaptchaResponse;
+            try (java.io.OutputStream os = conn.getOutputStream()) {
+                os.write(postParams.getBytes());
+                os.flush();
+            }
+            if (conn.getResponseCode() == java.net.HttpURLConnection.HTTP_OK) {
+                try (java.io.BufferedReader in = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getInputStream()))) {
+                    String inputLine;
+                    StringBuilder response = new StringBuilder();
+                    while ((inputLine = in.readLine()) != null) {
+                        response.append(inputLine);
+                    }
+                    return response.toString().contains("\"success\": true");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
  
     private String dashboardUrl(HttpServletRequest req) {
         String ctx  = req.getContextPath();
