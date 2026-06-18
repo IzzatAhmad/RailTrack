@@ -53,7 +53,7 @@ public class SupervisorProjectServlet extends HttpServlet {
             // Enforce daily limit: if running, started by student, and exceeded, auto-stop
             long durationToday = dockerService.getRunningDurationToday(projectId);
             if ("running".equalsIgnoreCase(project.getDockerStatus()) && durationToday >= project.getRunningLimitSeconds() && dockerService.wasContainerStartedByStudent(projectId)) {
-                dockerService.stopProject(project, 0); // system stop
+                dockerService.stopProject(project, supervisorId); // system stop
                 project.setDockerStatus("stopped");
             }
 
