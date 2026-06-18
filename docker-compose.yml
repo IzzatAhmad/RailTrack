@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: railtrack-mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: railtrack
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # Automatically initialize database using the sql file
+      - ./railtrack.sql:/docker-entrypoint-initdb.d/railtrack.sql
+
+  web:
+    build: .
+    container_name: railtrack-app
+    restart: always
+    ports:
+      - "80:8080" # Map host port 80 to container port 8080
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=railtrack
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - RAILTRACK_WORK_DIR=/var/railtrack
+    volumes:
+      # Mount the Host's Docker socket so the containerized Tomcat can control the host Docker engine
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Mount volume for student repositories
+      - student-repos:/var/railtrack
+    depends_on:
+      - db
+
+volumes:
+  mysql-data:
+  student-repos:

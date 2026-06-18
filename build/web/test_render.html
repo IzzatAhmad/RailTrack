@@ -1,0 +1,1191 @@
+﻿
+
+
+
+
+
+
+    
+        
+                <!DOCTYPE html>
+                <html lang="en">
+
+                <head>
+                    <meta charset="UTF-8" />
+                    <meta name="viewport" content="width=device-width, initial-scale=1" />
+                    <title>RailTrack | Student Menu Management
+                    </title>
+                    <!-- Favicon - PNG -->
+                    <link rel="icon" type="image/png" href="/RailTrack/img/roadway.png"
+                        sizes="32x32">
+                    <!-- Additional sizes for better support -->
+                    <link rel="icon" type="image/png" href="/RailTrack/img/roadway.png"
+                        sizes="16x16">
+                    <!-- Apple Touch Icon (iOS) -->
+                    <link rel="apple-touch-icon" href="/RailTrack/img/roadway.png">
+
+                    <!-- Bootstrap 5 -->
+                    <link rel="stylesheet"
+                        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+                    <!-- Bootstrap Icons -->
+                    <link rel="stylesheet"
+                        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+                    <!-- Google Fonts: DM Sans + DM Mono -->
+                    <link rel="preconnect" href="https://fonts.googleapis.com" />
+                    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+                    <link
+                        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap"
+                        rel="stylesheet" />
+
+                    <style>
+                        :root {
+                            --rt-primary: #2563eb;
+                            --rt-primary-dk: #1d4ed8;
+                            --rt-surface: #ffffff;
+                            --rt-bg: #f4f6fb;
+                            --rt-border: #e5e9f2;
+                            --rt-text: #1e2740;
+                            --rt-muted: #6b7a99;
+                            --rt-success: #16a34a;
+                            --rt-warning: #d97706;
+                            --rt-danger: #dc2626;
+                            --rt-info: #0891b2;
+                            --rt-radius: 10px;
+                            --rt-shadow: 0 1px 4px rgba(30, 39, 64, .08);
+                            --rt-nav-h: 60px;
+                        }
+
+                        *,
+                        *::before,
+                        *::after {
+                            box-sizing: border-box;
+                        }
+
+                        body {
+                            font-family: 'DM Sans', sans-serif;
+                            background: var(--rt-bg);
+                            color: var(--rt-text);
+                            min-height: 100vh;
+                            display: flex;
+                            flex-direction: column;
+                        }
+
+                        /* ── Navbar ── */
+                        .rt-nav {
+                            height: var(--rt-nav-h);
+                            background: var(--rt-surface);
+                            border-bottom: 1px solid var(--rt-border);
+                            display: flex;
+                            align-items: center;
+                            padding: 0 1.5rem;
+                            gap: 1rem;
+                            position: sticky;
+                            top: 0;
+                            z-index: 100;
+                            box-shadow: var(--rt-shadow);
+                        }
+
+                        .rt-nav-brand {
+                            display: flex;
+                            align-items: center;
+                            gap: .55rem;
+                            text-decoration: none;
+                            font-weight: 700;
+                            font-size: 1.05rem;
+                            color: var(--rt-text);
+                            letter-spacing: -.02em;
+                        }
+
+                        .rt-nav-brand .bi {
+                            font-size: 1.3rem;
+                            color: var(--rt-primary);
+                        }
+
+                        .rt-nav-brand small {
+                            font-weight: 400;
+                            font-size: .65rem;
+                            color: var(--rt-muted);
+                            display: block;
+                            line-height: 1;
+                            letter-spacing: 0;
+                        }
+
+                        .rt-nav-spacer {
+                            flex: 1;
+                        }
+
+                        .rt-nav-links {
+                            display: flex;
+                            align-items: center;
+                            gap: .25rem;
+                        }
+
+                        .rt-nav-link {
+                            display: inline-flex;
+                            align-items: center;
+                            gap: .35rem;
+                            padding: .38rem .55rem;
+                            border-radius: 6px;
+                            color: var(--rt-muted);
+                            font-size: .82rem;
+                            font-weight: 600;
+                            text-decoration: none;
+                            white-space: nowrap;
+                            transition: background .15s, color .15s;
+                        }
+
+                        .rt-nav-link:hover {
+                            background: var(--rt-bg);
+                            color: var(--rt-primary);
+                        }
+
+                        .rt-role-badge {
+                            font-size: .65rem;
+                            font-weight: 600;
+                            letter-spacing: .07em;
+                            padding: .18rem .55rem;
+                            border-radius: 4px;
+                            border: 1px solid var(--rt-border);
+                            color: var(--rt-muted);
+                            text-transform: uppercase;
+                            background: var(--rt-bg);
+                        }
+
+                        .rt-role-badge.STUDENT {
+                            color: var(--rt-primary);
+                            border-color: #bfdbfe;
+                            background: #eff6ff;
+                        }
+
+                        .rt-role-badge.SUPERVISOR {
+                            color: var(--rt-success);
+                            border-color: #bbf7d0;
+                            background: #f0fdf4;
+                        }
+
+                        .rt-role-badge.COORDINATOR {
+                            color: var(--rt-warning);
+                            border-color: #fde68a;
+                            background: #fffbeb;
+                        }
+
+                        .rt-notif-btn {
+                            position: relative;
+                            background: none;
+                            border: none;
+                            color: var(--rt-muted);
+                            font-size: 1.2rem;
+                            cursor: pointer;
+                            padding: .25rem;
+                        }
+
+                        .rt-notif-dot {
+                            position: absolute;
+                            top: 1px;
+                            right: 1px;
+                            width: 8px;
+                            height: 8px;
+                            background: var(--rt-danger);
+                            border-radius: 50%;
+                            border: 1.5px solid white;
+                        }
+
+                        .rt-user-menu {
+                            display: flex;
+                            align-items: center;
+                            gap: .5rem;
+                            cursor: pointer;
+                            padding: .3rem .6rem;
+                            border-radius: var(--rt-radius);
+                            transition: background .15s;
+                        }
+
+                        .rt-user-menu:hover {
+                            background: var(--rt-bg);
+                        }
+
+                        .rt-user-avatar {
+                            width: 32px;
+                            height: 32px;
+                            border-radius: 50%;
+                            background: var(--rt-primary);
+                            color: #fff;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: .8rem;
+                            font-weight: 600;
+                        }
+
+                        .rt-logout-btn {
+                            font-size: .82rem;
+                            padding: .3rem .75rem;
+                            border-radius: 6px;
+                            border: 1px solid var(--rt-danger);
+                            color: var(--rt-danger);
+                            background: none;
+                            text-decoration: none;
+                            transition: all .15s;
+                        }
+
+                        .rt-logout-btn:hover {
+                            background: var(--rt-danger);
+                            color: #fff;
+                        }
+
+                        /* ── Main content ── */
+                        .rt-main {
+                            flex: 1;
+                            padding: 1.75rem 1.5rem 2rem;
+                            max-width: 1280px;
+                            width: 100%;
+                            margin: 0 auto;
+                        }
+
+                        /* ── Status badges ── */
+                        .rt-status-pending {
+                            background: #fef3c7;
+                            color: #92400e;
+                        }
+
+                        .rt-status-active {
+                            background: #d1fae5;
+                            color: #065f46;
+                        }
+
+                        .rt-status-under_review {
+                            background: #dbeafe;
+                            color: #1e40af;
+                        }
+
+                        .rt-status-completed {
+                            background: #e0e7ff;
+                            color: #3730a3;
+                        }
+
+                        .rt-status-rejected {
+                            background: #fee2e2;
+                            color: #991b1b;
+                        }
+
+                        /* ── Docker status colours ── */
+                        .rt-docker-running {
+                            color: var(--rt-success);
+                            font-weight: 500;
+                        }
+
+                        .rt-docker-stopped {
+                            color: var(--rt-muted);
+                        }
+
+                        .rt-docker-error {
+                            color: var(--rt-danger);
+                        }
+
+                        .rt-docker-built {
+                            color: var(--rt-info);
+                        }
+
+                        .rt-docker-none {
+                            color: var(--rt-muted);
+                        }
+
+                        /* ── Cards ── */
+                        .rt-card {
+                            background: var(--rt-surface);
+                            border: 1px solid var(--rt-border);
+                            border-radius: var(--rt-radius);
+                            box-shadow: var(--rt-shadow);
+                        }
+
+                        .rt-card-header {
+                            padding: .9rem 1.2rem;
+                            border-bottom: 1px solid var(--rt-border);
+                            font-weight: 600;
+                            font-size: .9rem;
+                            display: flex;
+                            align-items: center;
+                            gap: .5rem;
+                        }
+
+                        /* ── Monospace (logs, code) ── */
+                        .rt-mono {
+                            font-family: 'DM Mono', monospace;
+                            font-size: .8rem;
+                        }
+
+                        /* ── Filter buttons ── */
+                        .rt-filter-btn.active {
+                            font-weight: 600;
+                        }
+
+                        /* ── Alerts ── */
+                        .rt-alert {
+                            padding: .7rem 1rem;
+                            border-radius: 8px;
+                            font-size: .875rem;
+                            border: 1px solid transparent;
+                            display: flex;
+                            align-items: center;
+                            gap: .5rem;
+                        }
+
+                        .rt-alert-success {
+                            background: #f0fdf4;
+                            color: #166534;
+                            border-color: #bbf7d0;
+                        }
+
+                        .rt-alert-error {
+                            background: #fef2f2;
+                            color: #991b1b;
+                            border-color: #fecaca;
+                        }
+
+                        .rt-alert-info {
+                            background: #eff6ff;
+                            color: #1e40af;
+                            border-color: #bfdbfe;
+                        }
+
+                        /* ── Responsive table ── */
+                        .table th {
+                            font-size: .75rem;
+                            text-transform: uppercase;
+                            letter-spacing: .05em;
+                            color: var(--rt-muted);
+                            font-weight: 600;
+                        }
+
+                        .table td {
+                            font-size: .875rem;
+                            vertical-align: middle;
+                        }
+
+                        /* ── Mobile ── */
+                        @media (max-width: 576px) {
+                            .rt-main {
+                                padding: 1rem .75rem;
+                            }
+
+                            .rt-nav {
+                                padding: 0 .75rem;
+                            }
+
+                            .rt-nav-links {
+                                display: none;
+                            }
+                        }
+                    </style>
+                </head>
+
+                <body>
+
+                    <!-- ── Navbar ─────────────────────────────────────────────────── -->
+                    <nav class="rt-nav">
+                        <a href="/login" class="rt-nav-brand">
+                            <img src="/RailTrack/img/roadway.gif" alt="RailTrack"
+                                style="width:28px;height:28px;object-fit:cover;border-radius:50%;">
+                            <span>RailTrack <small>FYP Management</small></span>
+                        </a>
+
+                        <div class="rt-nav-spacer"></div>
+
+                        
+                            <!-- Guest links -->
+                            <a href="#problem" class="d-none d-md-inline text-decoration-none"
+                                style="font-size:.875rem;color:var(--rt-muted);">Problem</a>
+                            <a href="#solution" class="d-none d-md-inline text-decoration-none"
+                                style="font-size:.875rem;color:var(--rt-muted);">Solution</a>
+                            <a href="#workflow" class="d-none d-md-inline text-decoration-none"
+                                style="font-size:.875rem;color:var(--rt-muted);">Workflow</a>
+                            <a href="javascript:void(0)" onclick="openLogin()" class="btn btn-primary btn-sm ms-2">Sign
+                                in</a>
+
+                            
+                    </nav>
+
+
+                    <!-- ── Page content ───────────────────────────────────────────── -->
+                    <main class="rt-main">
+
+<!-- Flash -->
+
+
+<!-- Breadcrumb -->
+<nav style="font-size:.82rem;margin-bottom:1.25rem;">
+    <a href="/RailTrack/coordinator/dashboard" style="color:var(--rt-primary);text-decoration:none;">
+        <i class="bi bi-house me-1"></i>Dashboard
+    </a>
+    <span class="mx-1" style="color:var(--rt-muted);">/</span>
+    <span style="color:var(--rt-muted);">Student Menu Management</span>
+</nav>
+
+<!-- Page header -->
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+        <h4 class="fw-bold mb-0">Student Menu Management</h4>
+        <p class="text-muted mb-0" style="font-size:.875rem;">
+            Control which tiles appear on the student dashboard
+        </p>
+    </div>
+    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addModal">
+        <i class="bi bi-plus-lg me-1"></i>Add Menu Item
+    </button>
+</div>
+
+<!-- Menu items table -->
+<div class="rt-card p-0">
+    <div class="rt-card-header">
+        <i class="bi bi-grid me-1"></i> Menu Items
+        <span class="badge bg-secondary ms-auto">9</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Icon</th>
+                    <th>Label</th>
+                    <th>Key</th>
+                    <th>URL</th>
+                    <th>Order</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            
+            <tr>
+                <td class="text-muted" style="font-size:.8rem;">13</td>
+                <td>
+                    <i class="bi-journal-bookmark-fill" style="font-size:1.3rem;color:#16a34a;"></i>
+                </td>
+                <td class="fw-semibold">Logbook</td>
+                <td><code style="font-size:.78rem;">logbook</code></td>
+                <td style="font-size:.8rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    /student/logbook
+                </td>
+                <td>1</td>
+                <td>
+                    <!-- Toggle switch -->
+                    <form method="post" action="/RailTrack/coordinator/menu" class="d-inline">
+                        <input type="hidden" name="action"  value="toggle">
+                        <input type="hidden" name="id"      value="13">
+                        <input type="hidden" name="enabled" value="0">
+                        <button type="submit" class="btn btn-sm btn-success"
+                                title="Click to disable">
+                            <i class="bi bi-toggle-on"></i>
+                            Enabled
+                        </button>
+                    </form>
+                </td>
+                <td>
+                    <!-- Edit -->
+                    <button class="btn btn-sm btn-outline-primary me-1"
+                            onclick="openEditModal(13,
+                                     'Logbook',
+                                     'bi-journal-bookmark-fill',
+                                     '#16a34a',
+                                     '/student/logbook',
+                                     1,
+                                     true)"
+                            title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <!-- Delete -->
+                    <form method="post" action="/RailTrack/coordinator/menu" class="d-inline"
+                          onsubmit="return confirm('Delete \'Logbook\'?')">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id"     value="13">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            
+            <tr>
+                <td class="text-muted" style="font-size:.8rem;">4</td>
+                <td>
+                    <i class="bi-people-fill" style="font-size:1.3rem;color:#16a34a;"></i>
+                </td>
+                <td class="fw-semibold">List</td>
+                <td><code style="font-size:.78rem;">student_list</code></td>
+                <td style="font-size:.8rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    /students/list
+                </td>
+                <td>4</td>
+                <td>
+                    <!-- Toggle switch -->
+                    <form method="post" action="/RailTrack/coordinator/menu" class="d-inline">
+                        <input type="hidden" name="action"  value="toggle">
+                        <input type="hidden" name="id"      value="4">
+                        <input type="hidden" name="enabled" value="0">
+                        <button type="submit" class="btn btn-sm btn-success"
+                                title="Click to disable">
+                            <i class="bi bi-toggle-on"></i>
+                            Enabled
+                        </button>
+                    </form>
+                </td>
+                <td>
+                    <!-- Edit -->
+                    <button class="btn btn-sm btn-outline-primary me-1"
+                            onclick="openEditModal(4,
+                                     'List',
+                                     'bi-people-fill',
+                                     '#16a34a',
+                                     '/students/list',
+                                     4,
+                                     true)"
+                            title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <!-- Delete -->
+                    <form method="post" action="/RailTrack/coordinator/menu" class="d-inline"
+                          onsubmit="return confirm('Delete \'List\'?')">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id"     value="4">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            
+            <tr>
+                <td class="text-muted" style="font-size:.8rem;">5</td>
+                <td>
+                    <i class="bi-calendar-week-fill" style="font-size:1.3rem;color:#d97706;"></i>
+                </td>
+                <td class="fw-semibold">Planning</td>
+                <td><code style="font-size:.78rem;">planning</code></td>
+                <td style="font-size:.8rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    /planning
+                </td>
+                <td>5</td>
+                <td>
+                    <!-- Toggle switch -->
+                    <form method="post" action="/RailTrack/coordinator/menu" class="d-inline">
+                        <input type="hidden" name="action"  value="toggle">
+                        <input type="hidden" name="id"      value="5">
+                        <input type="hidden" name="enabled" value="0">
+                        <button type="submit" class="btn btn-sm btn-success"
+                                title="Click to disable">
+                            <i class="bi bi-toggle-on"></i>
+                            Enabled
+                        </button>
+                    </form>
+                </td>
+                <td>
+                    <!-- Edit -->
+                    <button class="btn btn-sm btn-outline-primary me-1"
+                            onclick="openEditModal(5,
+                                     'Planning',
+                                     'bi-calendar-week-fill',
+                                     '#d97706',
+                                     '/planning',
+                                     5,
+                                     true)"
+                            title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <!-- Delete -->
+                    <form method="post" action="/RailTrack/coordinator/menu" class="d-inline"
+                          onsubmit="return confirm('Delete \'Planning\'?')">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id"     value="5">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            
+            <tr>
+                <td class="text-muted" style="font-size:.8rem;">7</td>
+                <td>
+                    <i class="bi-journal-text" style="font-size:1.3rem;color:#2563eb;"></i>
+                </td>
+                <td class="fw-semibold">Materials</td>
+                <td><code style="font-size:.78rem;">materials</code></td>
+                <td style="font-size:.8rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    /materials
+                </td>
+                <td>7</td>
+                <td>
+                    <!-- Toggle switch -->
+                    <form method="post" action="/RailTrack/coordinator/menu" class="d-inline">
+                        <input type="hidden" name="action"  value="toggle">
+                        <input type="hidden" name="id"      value="7">
+                        <input type="hidden" name="enabled" value="0">
+                        <button type="submit" class="btn btn-sm btn-success"
+                                title="Click to disable">
+                            <i class="bi bi-toggle-on"></i>
+                            Enabled
+                        </button>
+                    </form>
+                </td>
+                <td>
+                    <!-- Edit -->
+                    <button class="btn btn-sm btn-outline-primary me-1"
+                            onclick="openEditModal(7,
+                                     'Materials',
+                                     'bi-journal-text',
+                                     '#2563eb',
+                                     '/materials',
+                                     7,
+                                     true)"
+                            title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <!-- Delete -->
+                    <form method="post" action="/RailTrack/coordinator/menu" class="d-inline"
+                          onsubmit="return confirm('Delete \'Materials\'?')">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id"     value="7">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            
+            <tr>
+                <td class="text-muted" style="font-size:.8rem;">8</td>
+                <td>
+                    <i class="bi-check2-square" style="font-size:1.3rem;color:#1e2740;"></i>
+                </td>
+                <td class="fw-semibold">Rubrics</td>
+                <td><code style="font-size:.78rem;">rubrics</code></td>
+                <td style="font-size:.8rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    /rubrics
+                </td>
+                <td>8</td>
+                <td>
+                    <!-- Toggle switch -->
+                    <form method="post" action="/RailTrack/coordinator/menu" class="d-inline">
+                        <input type="hidden" name="action"  value="toggle">
+                        <input type="hidden" name="id"      value="8">
+                        <input type="hidden" name="enabled" value="0">
+                        <button type="submit" class="btn btn-sm btn-success"
+                                title="Click to disable">
+                            <i class="bi bi-toggle-on"></i>
+                            Enabled
+                        </button>
+                    </form>
+                </td>
+                <td>
+                    <!-- Edit -->
+                    <button class="btn btn-sm btn-outline-primary me-1"
+                            onclick="openEditModal(8,
+                                     'Rubrics',
+                                     'bi-check2-square',
+                                     '#1e2740',
+                                     '/rubrics',
+                                     8,
+                                     true)"
+                            title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <!-- Delete -->
+                    <form method="post" action="/RailTrack/coordinator/menu" class="d-inline"
+                          onsubmit="return confirm('Delete \'Rubrics\'?')">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id"     value="8">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            
+            <tr>
+                <td class="text-muted" style="font-size:.8rem;">9</td>
+                <td>
+                    <i class="bi-people-fill" style="font-size:1.3rem;color:#2563eb;"></i>
+                </td>
+                <td class="fw-semibold">Presentation</td>
+                <td><code style="font-size:.78rem;">presentation</code></td>
+                <td style="font-size:.8rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    /presentation
+                </td>
+                <td>9</td>
+                <td>
+                    <!-- Toggle switch -->
+                    <form method="post" action="/RailTrack/coordinator/menu" class="d-inline">
+                        <input type="hidden" name="action"  value="toggle">
+                        <input type="hidden" name="id"      value="9">
+                        <input type="hidden" name="enabled" value="0">
+                        <button type="submit" class="btn btn-sm btn-success"
+                                title="Click to disable">
+                            <i class="bi bi-toggle-on"></i>
+                            Enabled
+                        </button>
+                    </form>
+                </td>
+                <td>
+                    <!-- Edit -->
+                    <button class="btn btn-sm btn-outline-primary me-1"
+                            onclick="openEditModal(9,
+                                     'Presentation',
+                                     'bi-people-fill',
+                                     '#2563eb',
+                                     '/presentation',
+                                     9,
+                                     true)"
+                            title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <!-- Delete -->
+                    <form method="post" action="/RailTrack/coordinator/menu" class="d-inline"
+                          onsubmit="return confirm('Delete \'Presentation\'?')">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id"     value="9">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            
+            <tr>
+                <td class="text-muted" style="font-size:.8rem;">10</td>
+                <td>
+                    <i class="bi-upload" style="font-size:1.3rem;color:#1e2740;"></i>
+                </td>
+                <td class="fw-semibold">Thesis Upload</td>
+                <td><code style="font-size:.78rem;">thesis_upload</code></td>
+                <td style="font-size:.8rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    /thesis/upload
+                </td>
+                <td>10</td>
+                <td>
+                    <!-- Toggle switch -->
+                    <form method="post" action="/RailTrack/coordinator/menu" class="d-inline">
+                        <input type="hidden" name="action"  value="toggle">
+                        <input type="hidden" name="id"      value="10">
+                        <input type="hidden" name="enabled" value="0">
+                        <button type="submit" class="btn btn-sm btn-success"
+                                title="Click to disable">
+                            <i class="bi bi-toggle-on"></i>
+                            Enabled
+                        </button>
+                    </form>
+                </td>
+                <td>
+                    <!-- Edit -->
+                    <button class="btn btn-sm btn-outline-primary me-1"
+                            onclick="openEditModal(10,
+                                     'Thesis Upload',
+                                     'bi-upload',
+                                     '#1e2740',
+                                     '/thesis/upload',
+                                     10,
+                                     true)"
+                            title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <!-- Delete -->
+                    <form method="post" action="/RailTrack/coordinator/menu" class="d-inline"
+                          onsubmit="return confirm('Delete \'Thesis Upload\'?')">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id"     value="10">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            
+            <tr>
+                <td class="text-muted" style="font-size:.8rem;">11</td>
+                <td>
+                    <i class="bi-list-check" style="font-size:1.3rem;color:#1e2740;"></i>
+                </td>
+                <td class="fw-semibold">Thesis Status</td>
+                <td><code style="font-size:.78rem;">thesis_status</code></td>
+                <td style="font-size:.8rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    /thesis/status
+                </td>
+                <td>11</td>
+                <td>
+                    <!-- Toggle switch -->
+                    <form method="post" action="/RailTrack/coordinator/menu" class="d-inline">
+                        <input type="hidden" name="action"  value="toggle">
+                        <input type="hidden" name="id"      value="11">
+                        <input type="hidden" name="enabled" value="0">
+                        <button type="submit" class="btn btn-sm btn-success"
+                                title="Click to disable">
+                            <i class="bi bi-toggle-on"></i>
+                            Enabled
+                        </button>
+                    </form>
+                </td>
+                <td>
+                    <!-- Edit -->
+                    <button class="btn btn-sm btn-outline-primary me-1"
+                            onclick="openEditModal(11,
+                                     'Thesis Status',
+                                     'bi-list-check',
+                                     '#1e2740',
+                                     '/thesis/status',
+                                     11,
+                                     true)"
+                            title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <!-- Delete -->
+                    <form method="post" action="/RailTrack/coordinator/menu" class="d-inline"
+                          onsubmit="return confirm('Delete \'Thesis Status\'?')">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id"     value="11">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            
+            <tr>
+                <td class="text-muted" style="font-size:.8rem;">14</td>
+                <td>
+                    <i class="bi-file-earmark-richtext-fill" style="font-size:1.3rem;color:#10b981;"></i>
+                </td>
+                <td class="fw-semibold">My Documents</td>
+                <td><code style="font-size:.78rem;">my_documents</code></td>
+                <td style="font-size:.8rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    /student/documents
+                </td>
+                <td>12</td>
+                <td>
+                    <!-- Toggle switch -->
+                    <form method="post" action="/RailTrack/coordinator/menu" class="d-inline">
+                        <input type="hidden" name="action"  value="toggle">
+                        <input type="hidden" name="id"      value="14">
+                        <input type="hidden" name="enabled" value="0">
+                        <button type="submit" class="btn btn-sm btn-success"
+                                title="Click to disable">
+                            <i class="bi bi-toggle-on"></i>
+                            Enabled
+                        </button>
+                    </form>
+                </td>
+                <td>
+                    <!-- Edit -->
+                    <button class="btn btn-sm btn-outline-primary me-1"
+                            onclick="openEditModal(14,
+                                     'My Documents',
+                                     'bi-file-earmark-richtext-fill',
+                                     '#10b981',
+                                     '/student/documents',
+                                     12,
+                                     true)"
+                            title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <!-- Delete -->
+                    <form method="post" action="/RailTrack/coordinator/menu" class="d-inline"
+                          onsubmit="return confirm('Delete \'My Documents\'?')">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id"     value="14">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Live preview -->
+<div class="mt-4">
+    <h6 class="fw-semibold mb-3"><i class="bi bi-eye me-1"></i>Student Menu Preview</h6>
+    <div class="rt-card p-3">
+        <div class="row g-3">
+            
+            <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                <a href="/RailTrack/student/logbook"
+                   class="rt-card text-center py-3 px-2 h-100 d-flex flex-column justify-content-center text-decoration-none"
+                   style="cursor:pointer;transition:transform .15s, box-shadow .15s;">
+                    <i class="bi-journal-bookmark-fill"
+                       style="font-size:1.8rem;color:#16a34a;"></i>
+                    <div class="mt-2" style="font-size:.78rem;font-weight:600;color:var(--rt-primary);">
+                        Logbook
+                    </div>
+                </a>
+            </div>
+            
+            <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                <a href="/RailTrack/students/list"
+                   class="rt-card text-center py-3 px-2 h-100 d-flex flex-column justify-content-center text-decoration-none"
+                   style="cursor:pointer;transition:transform .15s, box-shadow .15s;">
+                    <i class="bi-people-fill"
+                       style="font-size:1.8rem;color:#16a34a;"></i>
+                    <div class="mt-2" style="font-size:.78rem;font-weight:600;color:var(--rt-primary);">
+                        List
+                    </div>
+                </a>
+            </div>
+            
+            <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                <a href="/RailTrack/planning"
+                   class="rt-card text-center py-3 px-2 h-100 d-flex flex-column justify-content-center text-decoration-none"
+                   style="cursor:pointer;transition:transform .15s, box-shadow .15s;">
+                    <i class="bi-calendar-week-fill"
+                       style="font-size:1.8rem;color:#d97706;"></i>
+                    <div class="mt-2" style="font-size:.78rem;font-weight:600;color:var(--rt-primary);">
+                        Planning
+                    </div>
+                </a>
+            </div>
+            
+            <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                <a href="/RailTrack/materials"
+                   class="rt-card text-center py-3 px-2 h-100 d-flex flex-column justify-content-center text-decoration-none"
+                   style="cursor:pointer;transition:transform .15s, box-shadow .15s;">
+                    <i class="bi-journal-text"
+                       style="font-size:1.8rem;color:#2563eb;"></i>
+                    <div class="mt-2" style="font-size:.78rem;font-weight:600;color:var(--rt-primary);">
+                        Materials
+                    </div>
+                </a>
+            </div>
+            
+            <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                <a href="/RailTrack/rubrics"
+                   class="rt-card text-center py-3 px-2 h-100 d-flex flex-column justify-content-center text-decoration-none"
+                   style="cursor:pointer;transition:transform .15s, box-shadow .15s;">
+                    <i class="bi-check2-square"
+                       style="font-size:1.8rem;color:#1e2740;"></i>
+                    <div class="mt-2" style="font-size:.78rem;font-weight:600;color:var(--rt-primary);">
+                        Rubrics
+                    </div>
+                </a>
+            </div>
+            
+            <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                <a href="/RailTrack/presentation"
+                   class="rt-card text-center py-3 px-2 h-100 d-flex flex-column justify-content-center text-decoration-none"
+                   style="cursor:pointer;transition:transform .15s, box-shadow .15s;">
+                    <i class="bi-people-fill"
+                       style="font-size:1.8rem;color:#2563eb;"></i>
+                    <div class="mt-2" style="font-size:.78rem;font-weight:600;color:var(--rt-primary);">
+                        Presentation
+                    </div>
+                </a>
+            </div>
+            
+            <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                <a href="/RailTrack/thesis/upload"
+                   class="rt-card text-center py-3 px-2 h-100 d-flex flex-column justify-content-center text-decoration-none"
+                   style="cursor:pointer;transition:transform .15s, box-shadow .15s;">
+                    <i class="bi-upload"
+                       style="font-size:1.8rem;color:#1e2740;"></i>
+                    <div class="mt-2" style="font-size:.78rem;font-weight:600;color:var(--rt-primary);">
+                        Thesis Upload
+                    </div>
+                </a>
+            </div>
+            
+            <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                <a href="/RailTrack/thesis/status"
+                   class="rt-card text-center py-3 px-2 h-100 d-flex flex-column justify-content-center text-decoration-none"
+                   style="cursor:pointer;transition:transform .15s, box-shadow .15s;">
+                    <i class="bi-list-check"
+                       style="font-size:1.8rem;color:#1e2740;"></i>
+                    <div class="mt-2" style="font-size:.78rem;font-weight:600;color:var(--rt-primary);">
+                        Thesis Status
+                    </div>
+                </a>
+            </div>
+            
+            <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                <a href="/RailTrack/student/documents"
+                   class="rt-card text-center py-3 px-2 h-100 d-flex flex-column justify-content-center text-decoration-none"
+                   style="cursor:pointer;transition:transform .15s, box-shadow .15s;">
+                    <i class="bi-file-earmark-richtext-fill"
+                       style="font-size:1.8rem;color:#10b981;"></i>
+                    <div class="mt-2" style="font-size:.78rem;font-weight:600;color:var(--rt-primary);">
+                        My Documents
+                    </div>
+                </a>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- ── Add Modal ─────────────────────────────────────────────────────── -->
+<div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius:12px;border:1px solid var(--rt-border);">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg me-2"></i>Add Menu Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="/RailTrack/coordinator/menu">
+                <input type="hidden" name="action" value="add">
+                <div class="modal-body pt-2">
+                    <div class="mb-3">  <label class="form-label fw-semibold" style="font-size:.83rem;">Item Key *    <small class="text-muted">(unique, no spaces)</small></label>  <input type="text" name="item_key" class="form-control" required         placeholder="thesis_upload"></div><div class="mb-3">  <label class="form-label fw-semibold" style="font-size:.83rem;">Label *</label>  <input type="text" name="label" class="form-control" required placeholder="Thesis Upload"></div><div class="row g-2 mb-3">  <div class="col-8">    <label class="form-label fw-semibold" style="font-size:.83rem;">Icon class</label>    <input type="text" name="icon" class="form-control" placeholder="bi-upload" required>  </div>  <div class="col-4">    <label class="form-label fw-semibold" style="font-size:.83rem;">Color</label>    <input type="color" name="icon_color" class="form-control form-control-color w-100" value="#2563eb">  </div></div><div class="mb-3">  <label class="form-label fw-semibold" style="font-size:.83rem;">URL *</label>  <input type="text" name="url" class="form-control" required placeholder="/thesis/upload"></div><div class="row g-2 mb-3">  <div class="col-6">    <label class="form-label fw-semibold" style="font-size:.83rem;">Sort Order</label>    <input type="number" name="sort_order" class="form-control" value="99" min="0">  </div>  <div class="col-6">    <label class="form-label fw-semibold" style="font-size:.83rem;">Status</label>    <select name="is_enabled" class="form-select">      <option value="1" selected>Enabled</option>      <option value="0">Disabled</option>    </select>  </div></div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-lg me-1"></i>Add Item
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ── Edit Modal ────────────────────────────────────────────────────── -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius:12px;border:1px solid var(--rt-border);">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold"><i class="bi bi-pencil me-2"></i>Edit Menu Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="/RailTrack/coordinator/menu" id="editForm">
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="id"     id="editId">
+                <div class="modal-body pt-2">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size:.83rem;">Label *</label>
+                        <input type="text" name="label" id="editLabel" class="form-control" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-8">
+                            <label class="form-label fw-semibold" style="font-size:.83rem;">
+                                Icon class <small class="text-muted">(Bootstrap Icons)</small>
+                            </label>
+                            <input type="text" name="icon" id="editIcon" class="form-control"
+                                   placeholder="bi-grid-fill" required>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label fw-semibold" style="font-size:.83rem;">Color</label>
+                            <input type="color" name="icon_color" id="editIconColor"
+                                   class="form-control form-control-color w-100">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size:.83rem;">URL *</label>
+                        <input type="text" name="url" id="editUrl" class="form-control" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold" style="font-size:.83rem;">Sort Order</label>
+                            <input type="number" name="sort_order" id="editSortOrder"
+                                   class="form-control" min="0">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold" style="font-size:.83rem;">Status</label>
+                            <select name="is_enabled" id="editEnabled" class="form-select">
+                                <option value="1">Enabled</option>
+                                <option value="0">Disabled</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-save me-1"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+</main><!-- /rt-main -->
+
+<!-- Footer -->
+<footer class="container-fluid  py-4" style="background-color: white !important;">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+
+            <div class="d-flex align-items-center mb-3 mb-md-0">
+                <div class="me-4">
+                    <img src="/RailTrack/img/roadway.gif" 
+                         alt="RailTrack" 
+                         style="width: 32px; height: 32px; object-fit: cover; border-radius: 50%;">
+                </div>
+
+                <a class="text-success text-decoration-none d-flex small font-monospace">
+                    &copy; 2026 RailTrack Platform. Built for University Final Year Projects. 
+                </a>
+            </div>
+
+            <div class="small font-monospace">
+                Powered by Docker & Java EE.
+            </div>
+
+        </div>
+    </div>
+</footer>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/RailTrack/js/railtrack.js"></script>
+
+<!-- Global JS: filter buttons, flash messages, SSE badge refresh -->
+<script>
+(function () {
+    // ── Status filter buttons ─────────────────────────────────────────────────
+    document.querySelectorAll('.rt-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.rt-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const filter = btn.dataset.filter;
+            document.querySelectorAll('#projectsTable tbody tr').forEach(row => {
+                row.style.display =
+                    (filter === 'all' || row.dataset.status === filter) ? '' : 'none';
+            });
+        });
+    });
+
+    // ── Auto-dismiss flash alerts after 4 s ──────────────────────────────────
+    document.querySelectorAll('.rt-flash').forEach(el => {
+        setTimeout(() => {
+            el.style.transition = 'opacity .4s';
+            el.style.opacity = '0';
+            setTimeout(() => el.remove(), 400);
+        }, 4000);
+    });
+
+    // ── SSE docker-status badge updates ──────────────────────────────────────
+    const sseTarget = document.getElementById('dashboard-sse-target');
+    if (sseTarget) {
+        const ctx = sseTarget.dataset.ctx || '';
+        // connect to a hypothetical status-stream endpoint per project
+        // (individual project pages use DockerSSEServlet instead)
+    }
+})();
+</script>
+</body>
+</html>
+
+
+<script>
+function openEditModal(id, label, icon, iconColor, url, sortOrder, enabled) {
+    document.getElementById('editId').value        = id;
+    document.getElementById('editLabel').value     = label;
+    document.getElementById('editIcon').value      = icon;
+    document.getElementById('editIconColor').value = iconColor;
+    document.getElementById('editUrl').value       = url;
+    document.getElementById('editSortOrder').value = sortOrder;
+    document.getElementById('editEnabled').value   = enabled ? '1' : '0';
+    new bootstrap.Modal(document.getElementById('editModal')).show();
+}
+</script>
+
+
+
+

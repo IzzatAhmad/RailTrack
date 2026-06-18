@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RailTrack | High-Fidelity Interactive Wireframes</title>
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Prototype Role Swapper (Always Visible Floating Bar) -->
+    <div id="proto-swapper">
+        <div class="swapper-title">
+            <i class="bi bi-train-front-fill"></i>
+            <span>RailTrack Wireframe Prototype</span>
+        </div>
+        <div class="swapper-controls">
+            <span style="color: #64748b; font-weight: 500;">Role Simulator:</span>
+            <button class="swapper-btn" onclick="RT_APP.setRole('GUEST')" id="btn-guest">Guest</button>
+            <button class="swapper-btn" onclick="RT_APP.setRole('STUDENT')" id="btn-student">Student (Alice)</button>
+            <button class="swapper-btn" onclick="RT_APP.setRole('SUPERVISOR')" id="btn-supervisor">Supervisor (Dr. Sarah)</button>
+            <button class="swapper-btn" onclick="RT_APP.setRole('COORDINATOR')" id="btn-coordinator">Coordinator (Prof. Helen)</button>
+            
+            <div style="border-left: 1px solid #334155; height: 16px; margin: 0 0.5rem;"></div>
+            
+            <span class="role-badge-indicator" id="current-role-badge">Guest</span>
+        </div>
+    </div>
+
+    <!-- Main App Grid Structure -->
+    <div class="layout-wrapper" id="app-layout">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="app-sidebar">
+            <a href="#/home" class="sidebar-brand">
+                <i class="bi bi-train-front"></i>
+                <div>
+                    <span>RailTrack</span>
+                    <small>FYP Management</small>
+                </div>
+            </a>
+            
+            <!-- User Status in Sidebar -->
+            <div class="sidebar-user">
+                <div class="sidebar-user-avatar" id="sb-user-avatar">?</div>
+                <div class="sidebar-user-info">
+                    <div class="sidebar-user-name" id="sb-user-name">Guest User</div>
+                    <div class="sidebar-user-role" id="sb-user-role">Guest</div>
+                </div>
+            </div>
+
+            <!-- System Hierarchical Menu -->
+            <div style="margin-top: 1rem; overflow-y: auto; flex: 1;" id="sb-hierarchy-section">
+                <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-main); margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;" onclick="RT_APP.toggleHierarchyMenu()">
+                    <span><i class="bi bi-diagram-3-fill"></i> System Sitemap Hierarchy</span>
+                    <span id="hierarchy-toggle-arrow"><i class="bi bi-chevron-down"></i></span>
+                </div>
+                <div id="sb-hierarchy-tree" class="hierarchy-tree">
+                    <!-- Populated dynamically by app.js -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Column -->
+        <div class="content-panel">
+            
+            <!-- Top Navbar for Signed In Users -->
+            <header class="header-bar" id="app-header">
+                <div class="header-title" id="page-title-display">Dashboard</div>
+                <div class="header-actions">
+                    <!-- Notifications -->
+                    <button class="btn btn-secondary" style="padding: 0.4rem 0.6rem; position: relative;" onclick="RT_APP.showNotifications()" title="Notifications">
+                        <i class="bi bi-bell-fill"></i>
+                        <span style="position: absolute; top: -3px; right: -3px; background: var(--danger); width: 8px; height: 8px; border-radius: 50%;"></span>
+                    </button>
+                    <!-- Log Out -->
+                    <button class="btn btn-secondary" onclick="RT_APP.logout()">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </button>
+                </div>
+            </header>
+            
+            <!-- Views Target Container -->
+            <main class="main-content" id="view-container"></main>
+        </div>
+
+    </div>
+
+    <!-- ── GLOBAL MODALS ────────────────────────────────────────── -->
+
+    <!-- Login Modal -->
+    <div class="rt-modal-overlay" id="login-modal">
+        <div class="rt-modal">
+            <div class="rt-modal-header">
+                <h3 style="font-weight: 700;"><i class="bi bi-shield-lock me-1"></i> Sign In to RailTrack</h3>
+                <button onclick="RT_APP.closeModal('login-modal')" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;"><i class="bi bi-x"></i></button>
+            </div>
+            <div class="rt-modal-body">
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">Select a profile to simulate login credentials instantly:</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <button class="btn btn-secondary" style="justify-content: flex-start; text-align: left; padding: 0.75rem;" onclick="RT_APP.loginAs(1)">
+                        <div class="sidebar-user-avatar role-student" style="width: 28px; height: 28px; font-size: 0.75rem;">A</div>
+                        <div style="margin-left: 0.5rem;">
+                            <strong style="display:block; font-size: 0.85rem;">Alice Johnson (Student)</strong>
+                            <span style="font-size: 0.7rem; color: var(--text-muted);">View projects, logbook, upload documents</span>
+                        </div>
+                    </button>
+                    <button class="btn btn-secondary" style="justify-content: flex-start; text-align: left; padding: 0.75rem;" onclick="RT_APP.loginAs(3)">
+                        <div class="sidebar-user-avatar role-supervisor" style="width: 28px; height: 28px; font-size: 0.75rem;">SS</div>
+                        <div style="margin-left: 0.5rem;">
+                            <strong style="display:block; font-size: 0.85rem;">Dr. Sarah Smith (Supervisor)</strong>
+                            <span style="font-size: 0.7rem; color: var(--text-muted);">Assess students, run containers, post comments</span>
+                        </div>
+                    </button>
+                    <button class="btn btn-secondary" style="justify-content: flex-start; text-align: left; padding: 0.75rem;" onclick="RT_APP.loginAs(5)">
+                        <div class="sidebar-user-avatar role-coordinator" style="width: 28px; height: 28px; font-size: 0.75rem;">HC</div>
+                        <div style="margin-left: 0.5rem;">
+                            <strong style="display:block; font-size: 0.85rem;">Prof. Helen Clark (Coordinator)</strong>
+                            <span style="font-size: 0.7rem; color: var(--text-muted);">Manage cohort, allocate supervisors, docker terminal</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+            <div class="rt-modal-footer">
+                <button class="btn btn-secondary" onclick="RT_APP.closeModal('login-modal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit Project Modal -->
+    <div class="rt-modal-overlay" id="submit-project-modal">
+        <div class="rt-modal">
+            <form onsubmit="RT_APP.submitProjectAction(event)">
+                <div class="rt-modal-header">
+                    <h3 style="font-weight: 700;">Submit New FYP Project</h3>
+                    <button type="button" onclick="RT_APP.closeModal('submit-project-modal')" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;"><i class="bi bi-x"></i></button>
+                </div>
+                <div class="rt-modal-body">
+                    <div class="form-group">
+                        <label class="form-label">GitHub Repository URL *</label>
+                        <div style="position: relative;">
+                            <input type="url" id="new-proj-repo" required placeholder="https://github.com/username/repository" class="form-control" oninput="RT_APP.mockRepoAutofill(this.value)">
+                            <div id="repo-loader" style="display: none; position: absolute; right: 10px; top: 10px; font-size: 0.8rem; color: var(--text-muted);">
+                                <i class="bi bi-arrow-repeat spin"></i> Fetching...
+                            </div>
+                        </div>
+                        <div id="repo-feedback" style="font-size: 0.75rem; margin-top: 0.25rem; display: none;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Project Title *</label>
+                        <input type="text" id="new-proj-title" required placeholder="E.g. Intelligent Data Pipeline Scanner" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Project Description</label>
+                        <textarea id="new-proj-desc" rows="3" placeholder="Brief outline of project scope and features..." class="form-control"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Branch</label>
+                        <input type="text" id="new-proj-branch" value="main" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Semester</label>
+                        <input type="text" id="new-proj-semester" value="2026/2027-1" readonly class="form-control" style="background: var(--primary-light);">
+                    </div>
+                </div>
+                <div class="rt-modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="RT_APP.closeModal('submit-project-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Submit Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Assign Supervisor Modal -->
+    <div class="rt-modal-overlay" id="assign-supervisor-modal">
+        <div class="rt-modal">
+            <form onsubmit="RT_APP.assignSupervisorAction(event)">
+                <input type="hidden" id="assign-proj-id">
+                <div class="rt-modal-header">
+                    <h3 style="font-weight: 700;">Assign Supervisor</h3>
+                    <button type="button" onclick="RT_APP.closeModal('assign-supervisor-modal')" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;"><i class="bi bi-x"></i></button>
+                </div>
+                <div class="rt-modal-body">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;" id="assign-proj-title">Project: Smart Attendance System</p>
+                    <div class="form-group">
+                        <label class="form-label">Select Supervisor *</label>
+                        <select id="assign-sv-select" required class="form-select"></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Optional Assignment Note</label>
+                        <input type="text" id="assign-sv-note" placeholder="e.g. As discussed in initial meeting" class="form-control">
+                    </div>
+                </div>
+                <div class="rt-modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="RT_APP.closeModal('assign-supervisor-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-success"><i class="bi bi-person-check"></i> Assign</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Upload User List Modal -->
+    <div class="rt-modal-overlay" id="import-users-modal">
+        <div class="rt-modal">
+            <form onsubmit="RT_APP.importUsersAction(event)">
+                <div class="rt-modal-header">
+                    <h3 style="font-weight: 700;">Import User Cohort</h3>
+                    <button type="button" onclick="RT_APP.closeModal('import-users-modal')" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;"><i class="bi bi-x"></i></button>
+                </div>
+                <div class="rt-modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Select CSV / Excel Template File *</label>
+                        <input type="file" required accept=".csv,.xlsx" class="form-control">
+                    </div>
+                    <div style="background: var(--primary-light); color: var(--text-main); font-size: 0.78rem; padding: 0.75rem; border: 1px solid var(--border-color);">
+                        <i class="bi bi-info-circle-fill"></i> Uploading a CSV will create mock user profiles automatically and populate the students / supervisors database.
+                    </div>
+                </div>
+                <div class="rt-modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="RT_APP.closeModal('import-users-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-upload"></i> Upload & Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="mockData.js"></script>
+    <script src="templates.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
