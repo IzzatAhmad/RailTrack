@@ -59,7 +59,7 @@
             Student: <strong style="font-size:.875rem;"><%= project.getStudentName() %></strong>
         <% } %>
         <% if (running && project.getPreviewUrl() != null) { %>
-        <a href="<%= project.getPreviewUrl() %>" target="_blank"
+        <a href="http://<%= request.getServerName() %>:<%= project.getContainerPort() %>" target="_blank"
            class="btn btn-sm btn-outline-success ms-auto">
             <i class="bi bi-box-arrow-up-right me-1"></i>Open :<%= project.getContainerPort() %>
         </a>

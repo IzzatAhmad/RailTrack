@@ -7,7 +7,7 @@ public class FetchPage {
         CookieManager cookieManager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
         CookieHandler.setDefault(cookieManager);
 
-        HttpURLConnection con = (HttpURLConnection) new URL("http://localhost:8080/RailTrack/login").openConnection();
+        HttpURLConnection con = (HttpURLConnection) new URL("http://localhost:8080/login").openConnection();
         con.setRequestMethod("POST");
         con.setDoOutput(true);
         con.setInstanceFollowRedirects(false);
@@ -19,7 +19,7 @@ public class FetchPage {
         
         System.out.println("Login Response Code: " + con.getResponseCode());
 
-        HttpURLConnection con2 = (HttpURLConnection) new URL("http://localhost:8080/RailTrack/coordinator/menu").openConnection();
+        HttpURLConnection con2 = (HttpURLConnection) new URL("http://localhost:8080/coordinator/menu").openConnection();
         con2.setRequestMethod("GET");
         
         System.out.println("Page Response Code: " + con2.getResponseCode());

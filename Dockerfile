@@ -11,7 +11,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy the built WAR file to Tomcat webapps
-COPY dist/RailTrack.war /usr/local/tomcat/webapps/RailTrack.war
+COPY dist/RailTrack.war /usr/local/tomcat/webapps/ROOT.war
 
 # Set default work dir for RailTrack (cloned student repositories)
 ENV RAILTRACK_WORK_DIR=/var/railtrack

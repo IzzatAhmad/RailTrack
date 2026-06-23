@@ -41,11 +41,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1"/>
         <title>RailTrack | home</title>
         <!-- Favicon - PNG -->
-        <link rel="icon" type="image/png" href="/RailTrack/img/roadway.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="<%= ctx %>/img/roadway.png" sizes="32x32">
         <!-- Additional sizes for better support -->
-        <link rel="icon" type="image/png" href="/RailTrack/img/roadway.png" sizes="16x16">
+        <link rel="icon" type="image/png" href="<%= ctx %>/img/roadway.png" sizes="16x16">
         <!-- Apple Touch Icon (iOS) -->
-        <link rel="apple-touch-icon" href="/RailTrack/img/roadway.png">
+        <link rel="apple-touch-icon" href="<%= ctx %>/img/roadway.png">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
         <script src="https://www.google.com/recaptcha/api.js" async defer></script>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
