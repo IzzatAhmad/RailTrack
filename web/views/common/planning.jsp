@@ -10,13 +10,39 @@
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
             <style>
-                #calendar {
+                .calendar-container {
                     max-width: 1100px;
                     margin: 0 auto;
                     background: #fff;
                     padding: 20px;
                     border-radius: 8px;
                     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                }
+                #calendar {
+                    width: 100%;
+                }
+
+                @media (max-width: 768px) {
+                    .calendar-container {
+                        padding: 10px;
+                    }
+                    .fc .fc-toolbar {
+                        flex-direction: column;
+                        gap: 10px;
+                    }
+                    .fc-toolbar-title {
+                        font-size: 1.1rem !important;
+                    }
+                    .fc .fc-button {
+                        padding: 0.25rem 0.5rem !important;
+                        font-size: 0.75rem !important;
+                    }
+                    .fc-col-header-cell-cushion, .fc-daygrid-day-number {
+                        font-size: 0.75rem !important;
+                    }
+                    .fc-event-title {
+                        font-size: 0.65rem !important;
+                    }
                 }
 
                 .fc-event {
@@ -40,6 +66,10 @@
                 <a href="<%= ctx %>/<%= role != null ? role.toLowerCase() : "student" %>/dashboard" style="color:var(--rt-primary);text-decoration:none;">
                     <i class="bi bi-house me-1"></i>Dashboard
                 </a>
+                <% if ("COORDINATOR".equals(role)) { %>
+                <span class="mx-1" style="color:var(--rt-muted);">/</span>
+                <a href="<%= ctx %>/coordinator/menu" style="color:var(--rt-primary);text-decoration:none;">Student Menu Management</a>
+                <% } %>
                 <span class="mx-1" style="color:var(--rt-muted);">/</span>
                 <span style="color:var(--rt-muted);">Planning & Calendar</span>
             </nav>
@@ -51,7 +81,9 @@
                 </div>
             </div>
 
-            <div id='calendar'></div>
+            <div class="calendar-container">
+                <div id='calendar'></div>
+            </div>
 
             <hr class="my-5">
 <div class="row mb-5">
@@ -150,8 +182,11 @@
                     var viewEventModal = new bootstrap.Modal(document.getElementById('viewEventModal'));
                     var selectedEventId = null;
 
+                    var isMobile = window.innerWidth <= 768;
                     var calendar = new FullCalendar.Calendar(calendarEl, {
                         initialView: 'dayGridMonth',
+                        aspectRatio: isMobile ? 0.9 : 1.35,
+                        height: 'auto',
                         headerToolbar: {
                             left: 'today prev,next',
                             center: 'title',
@@ -160,6 +195,9 @@
                         themeSystem: 'bootstrap5',
                         selectable: isCoordinator,
                         selectMirror: true,
+                        windowResize: function(arg) {
+                            calendar.setOption('aspectRatio', window.innerWidth <= 768 ? 0.9 : 1.35);
+                        },
 
                         // Fetch external and internal events
                         events: function (fetchInfo, successCallback, failureCallback) {

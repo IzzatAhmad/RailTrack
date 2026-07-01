@@ -550,4 +550,60 @@ public class ProjectDAO {
             ps.executeUpdate();
         }
     }
+
+    // ── Time-Quota Tracking Methods ──────────────────────────────────────────
+
+    public List<Project> findRunningProjects() throws SQLException {
+        List<Project> list = new ArrayList<>();
+        String sql = "SELECT p.*, u.full_name AS student_name, u.username AS student_username, u.department AS student_department, u.cgpa AS student_cgpa, " +
+                     "sv.id AS supervisor_id, sv.full_name AS supervisor_name " +
+                     "FROM projects p " +
+                     "JOIN users u ON p.student_id = u.id " +
+                     "LEFT JOIN users sv ON p.supervisor_id = sv.id " +
+                     "WHERE p.docker_status = 'running'";
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(map(rs));
+            }
+        }
+        return list;
+    }
+
+    public void incrementRunningTime(int projectId, int incrementSecs) throws SQLException {
+        String sql = "UPDATE projects SET " +
+                     "today_running_seconds = CASE " +
+                     "  WHEN last_running_update = CURRENT_DATE THEN today_running_seconds + ? " +
+                     "  ELSE ? " +
+                     "END, " +
+                     "last_running_update = CURRENT_DATE " +
+                     "WHERE id = ?";
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, incrementSecs);
+            ps.setInt(2, incrementSecs);
+            ps.setInt(3, projectId);
+            ps.executeUpdate();
+        }
+    }
+
+    public int getTodayRunningSeconds(int projectId) throws SQLException {
+        String sql = "SELECT CASE " +
+                     "  WHEN last_running_update = CURRENT_DATE THEN today_running_seconds " +
+                     "  ELSE 0 " +
+                     "END AS secs " +
+                     "FROM projects WHERE id = ?";
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, projectId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("secs");
+                }
+            }
+        }
+        return 0;
+    }
+
 }

@@ -35,6 +35,9 @@ public class UserDAO {
         } catch (SQLException ignored) {}
         u.setRole(User.Role.valueOf(rs.getString("role")));
         u.setActive(rs.getBoolean("active"));
+        try {
+            u.setBanned(rs.getBoolean("is_banned"));
+        } catch (SQLException ignored) {}
 
         Timestamp created = rs.getTimestamp("created_at");
         if (created != null) {
@@ -46,7 +49,18 @@ public class UserDAO {
             u.setLastLogin(login.toLocalDateTime());
         }
 
+        // last_activity may not exist yet if migration hasn't been run
+        try {
+            Timestamp activity = rs.getTimestamp("last_activity");
+            if (activity != null) {
+                u.setLastActivity(activity.toLocalDateTime());
+            }
+        } catch (SQLException ignored) {}
+
         u.setEmailNotifEnabled(rs.getBoolean("email_notif_enabled"));
+        try {
+            u.setSemester(rs.getString("semester"));
+        } catch (SQLException ignored) {}
 
         return u;
     }
@@ -70,8 +84,18 @@ public class UserDAO {
                     return null;
                 }
 
+                if (u.isBanned()) {
+                    String sup = u.getSupervisorName();
+                    if (sup != null && !sup.trim().isEmpty()) {
+                        throw new IllegalArgumentException("Account suspended. Please contact supervisor (" + sup.trim() + ") or coordinator.");
+                    } else {
+                        throw new IllegalArgumentException("Account suspended. Please contact a coordinator.");
+                    }
+                }
+
                 updateLastLogin(u.getId());
-                updateActiveTurn(u.getId(), 1); // mark user as active/online on login
+                updateLastActivity(u.getId()); // heartbeat-based online tracking
+                
                 return u;
             }
         }
@@ -97,6 +121,60 @@ public class UserDAO {
             ps.setInt(1, turnValue);
             ps.setInt(2, userId);
             ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Updates last_activity to NOW() for the given user.
+     * Called on login and by HeartbeatServlet every 2 minutes.
+     * Silently ignored if the column hasn't been migrated yet.
+     */
+    public void updateLastActivity(int userId) {
+        String sql = "UPDATE users SET last_activity = NOW() WHERE id = ?";
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
+            if (msg.contains("unknown column") || msg.contains("doesn't exist") || e.getErrorCode() == 1054) {
+                ensureLastActivityColumn();
+                try (Connection c = DBConnection.get();
+                     PreparedStatement ps = c.prepareStatement(sql)) {
+                    ps.setInt(1, userId);
+                    ps.executeUpdate();
+                } catch (SQLException ignored) {}
+            }
+        }
+    }
+
+    private void ensureLastActivityColumn() {
+        try (Connection c = DBConnection.get();
+             Statement s = c.createStatement()) {
+            boolean hasCol = false;
+            try (ResultSet rs = c.getMetaData().getColumns(null, null, "users", "last_activity")) {
+                hasCol = rs.next();
+            }
+            if (!hasCol) {
+                s.execute("ALTER TABLE users ADD COLUMN last_activity DATETIME NULL");
+                System.out.println("[UserDAO] Auto-migrated: last_activity column added.");
+            }
+        } catch (SQLException ex) {
+            System.err.println("[UserDAO] Auto-migration failed for last_activity: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Returns true if the user's last_activity is within the last 5 minutes.
+     */
+    public boolean isUserOnline(int userId) throws SQLException {
+        String sql = "SELECT 1 FROM users WHERE id = ? AND last_activity > NOW() - INTERVAL 5 MINUTE";
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
         }
     }
 
@@ -216,8 +294,8 @@ public class UserDAO {
         String sql =
                 "INSERT INTO users " +
                 "(username, password_hash, full_name, email, phone, department, cgpa, role, active, supervisor_id, " +
-                "email_notif_enabled) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "email_notif_enabled, semester) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection c = DBConnection.get();
              PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -241,6 +319,7 @@ public class UserDAO {
                 ps.setNull(10, java.sql.Types.INTEGER);
             }
             ps.setBoolean(11, u.isEmailNotifEnabled());
+            ps.setString(12, u.getSemester());
 
             ps.executeUpdate();
 
@@ -257,7 +336,7 @@ public class UserDAO {
     public void update(User u) throws SQLException {
         String sql =
                 "UPDATE users SET full_name = ?, email = ?, phone = ?, department = ?, " +
-                "email_notif_enabled = ? " +
+                "email_notif_enabled = ?, semester = ? " +
                 "WHERE id = ?";
 
         try (Connection c = DBConnection.get();
@@ -268,7 +347,8 @@ public class UserDAO {
             ps.setString(3, u.getPhone());
             ps.setString(4, u.getDepartment());
             ps.setBoolean(5, u.isEmailNotifEnabled());
-            ps.setInt(6, u.getId());
+            ps.setString(6, u.getSemester());
+            ps.setInt(7, u.getId());
 
             ps.executeUpdate();
         }
@@ -295,6 +375,26 @@ public class UserDAO {
              PreparedStatement ps = c.prepareStatement(sql)) {
 
             ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void banUser(int userId, boolean isBanned) throws SQLException {
+        String sql = "UPDATE users SET is_banned = ? WHERE id = ?";
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, isBanned ? 1 : 0);
+            ps.setInt(2, userId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void updateRole(int userId, User.Role role) throws SQLException {
+        String sql = "UPDATE users SET role = ? WHERE id = ?";
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, role.name());
+            ps.setInt(2, userId);
             ps.executeUpdate();
         }
     }
@@ -369,6 +469,100 @@ public class UserDAO {
             }
         }
     }
+
+    /**
+     * Persists a password-reset token (UUID) and its expiry on the user record.
+     * <p>
+     * Auto-migrates the required columns ({@code password_reset_token}, {@code reset_token_expiry})
+     * the first time they are needed, so no manual migration step is required.
+     */
+    public void savePasswordResetToken(int userId, String token, java.time.LocalDateTime expiry)
+            throws SQLException {
+        String sql = "UPDATE users SET password_reset_token = ?, reset_token_expiry = ? WHERE id = ?";
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, token);
+            ps.setTimestamp(2, java.sql.Timestamp.valueOf(expiry));
+            ps.setInt(3, userId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            // If the columns don't exist yet, add them and retry once
+            String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
+            if (msg.contains("unknown column") || msg.contains("doesn't exist") || e.getErrorCode() == 1054) {
+                ensureResetTokenColumns();
+                // Retry after migration
+                try (Connection c = DBConnection.get();
+                     PreparedStatement ps = c.prepareStatement(sql)) {
+                    ps.setString(1, token);
+                    ps.setTimestamp(2, java.sql.Timestamp.valueOf(expiry));
+                    ps.setInt(3, userId);
+                    ps.executeUpdate();
+                }
+            } else {
+                throw e; // Unrelated error — rethrow
+            }
+        }
+    }
+
+    /**
+     * Ensures the password reset token columns exist on the users table.
+     * Called automatically by savePasswordResetToken on first use.
+     */
+    private void ensureResetTokenColumns() {
+        try (Connection c = DBConnection.get();
+             Statement s = c.createStatement()) {
+            // Check if columns exist before altering to avoid duplicate-column errors
+            boolean hasToken  = false;
+            boolean hasExpiry = false;
+            try (ResultSet rs = c.getMetaData().getColumns(null, null, "users", "password_reset_token")) {
+                hasToken = rs.next();
+            }
+            try (ResultSet rs = c.getMetaData().getColumns(null, null, "users", "reset_token_expiry")) {
+                hasExpiry = rs.next();
+            }
+            if (!hasToken) {
+                s.execute("ALTER TABLE users ADD COLUMN password_reset_token VARCHAR(64) NULL");
+            }
+            if (!hasExpiry) {
+                s.execute("ALTER TABLE users ADD COLUMN reset_token_expiry DATETIME NULL");
+            }
+            System.out.println("[UserDAO] Auto-migrated: password_reset_token / reset_token_expiry columns added.");
+        } catch (SQLException ex) {
+            System.err.println("[UserDAO] Auto-migration failed for reset token columns: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    /**
+     * Finds a user by a valid, non-expired reset token.
+     * Returns null if the token is not found or has expired.
+     */
+    public User findByValidResetToken(String token) throws SQLException {
+        String sql = "SELECT u.*, sv.full_name AS supervisor_name " +
+                     "FROM users u " +
+                     "LEFT JOIN users sv ON u.supervisor_id = sv.id " +
+                     "WHERE u.password_reset_token = ? AND u.reset_token_expiry > NOW()";
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, token);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? map(rs) : null;
+            }
+        }
+    }
+
+    /**
+     * Clears the reset token after a successful password reset.
+     */
+    public void clearResetToken(int userId) throws SQLException {
+        String sql = "UPDATE users SET password_reset_token = NULL, reset_token_expiry = NULL WHERE id = ?";
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+    }
+
 
     // ── Project Evaluators ───────────────────────────────────────────────────
 

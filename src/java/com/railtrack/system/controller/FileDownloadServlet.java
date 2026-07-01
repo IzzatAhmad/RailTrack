@@ -106,6 +106,9 @@ public class FileDownloadServlet extends HttpServlet {
         }
     }
 
+    // The persistent storage location
+    private static final String UPLOAD_DIR = System.getProperty("user.home") + "/RailTrack_Storage/thesis_uploads";
+
     // ── Serve a student document ──────────────────────────────────────────────
 
     private void serveDocument(int docId, HttpServletResponse resp)
@@ -117,19 +120,37 @@ public class FileDownloadServlet extends HttpServlet {
             return;
         }
 
-        byte[] data = documentDAO.getDocumentData(docId);
-        if (data == null || data.length == 0) {
-            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Document data not found.");
+        String uniqueFileName = meta.getStudentId() + "_" + meta.getDocumentTypeId() + "_" + meta.getFileName();
+        java.nio.file.Path targetPath = java.nio.file.Paths.get(UPLOAD_DIR, uniqueFileName);
+
+        if (!java.nio.file.Files.exists(targetPath)) {
+            // Fallback for older files still in DB BLOB
+            byte[] data = documentDAO.getDocumentData(docId);
+            if (data == null || data.length == 0) {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Document file missing from server and database.");
+                return;
+            }
+            streamResponse(meta, data.length, resp, out -> out.write(data));
             return;
         }
 
+        streamResponse(meta, (int) java.nio.file.Files.size(targetPath), resp, out -> {
+            java.nio.file.Files.copy(targetPath, out);
+        });
+    }
+
+    private interface OutputStreamHandler {
+        void writeTo(OutputStream out) throws IOException;
+    }
+
+    private void streamResponse(StudentDocument meta, int contentLength, HttpServletResponse resp, OutputStreamHandler handler) throws IOException {
         String contentType = meta.getContentType();
         if (contentType == null || contentType.isEmpty()) {
             contentType = "application/octet-stream";
         }
 
         resp.setContentType(contentType);
-        resp.setContentLength(data.length);
+        resp.setContentLength(contentLength);
 
         // Display inline for PDFs and images, force download for other types
         boolean inline = contentType.startsWith("image/") || contentType.equals("application/pdf");
@@ -139,7 +160,7 @@ public class FileDownloadServlet extends HttpServlet {
         resp.setHeader("Cache-Control", "private, max-age=3600");
 
         try (OutputStream out = resp.getOutputStream()) {
-            out.write(data);
+            handler.writeTo(out);
         }
     }
 

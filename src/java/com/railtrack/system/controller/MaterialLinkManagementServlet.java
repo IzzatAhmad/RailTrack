@@ -42,13 +42,21 @@ public class MaterialLinkManagementServlet extends HttpServlet {
         try {
             if ("add".equals(action)) {
                 MaterialLink link = readLink(req);
-                dao.insert(link);
+                int id = dao.insert(link);
+                if (link.getFileData() != null) {
+                    link.setId(id);
+                    link.setUrl(req.getContextPath() + "/material-download?id=" + id);
+                    dao.update(link);
+                }
             } else if ("edit".equals(action)) {
                 int id = parseInt(req.getParameter("id"), 0);
                 MaterialLink link = dao.findById(id);
                 if (link != null) {
                     MaterialLink edited = readLink(req);
                     edited.setId(id);
+                    if (edited.getFileData() != null) {
+                        edited.setUrl(req.getContextPath() + "/material-download?id=" + id);
+                    }
                     dao.update(edited);
                 }
             } else if ("toggle".equals(action)) {
@@ -69,46 +77,34 @@ public class MaterialLinkManagementServlet extends HttpServlet {
         MaterialLink link = new MaterialLink();
         link.setSection(sanitize(req.getParameter("section")));
         link.setTitle(sanitize(req.getParameter("title")));
-        link.setUrl(resolveMaterialUrl(req));
         link.setSortOrder(parseInt(req.getParameter("sort_order"), 99));
         link.setEnabled("1".equals(req.getParameter("is_enabled")));
-        return link;
-    }
-
-    private String resolveMaterialUrl(HttpServletRequest req) throws IOException, ServletException {
+        
         Part pdf = req.getPart("pdf_file");
         if (pdf != null && pdf.getSize() > 0) {
-            return savePdf(pdf);
+            String submittedName = java.nio.file.Paths.get(pdf.getSubmittedFileName()).getFileName().toString();
+            if (!submittedName.toLowerCase().endsWith(".pdf")) {
+                throw new ServletException("Only PDF files can be uploaded for material links.");
+            }
+            link.setFileName(submittedName);
+            link.setFileType(pdf.getContentType());
+            try (java.io.InputStream is = pdf.getInputStream();
+                 java.io.ByteArrayOutputStream buffer = new java.io.ByteArrayOutputStream()) {
+                int nRead;
+                byte[] data = new byte[16384];
+                while ((nRead = is.read(data, 0, data.length)) != -1) {
+                    buffer.write(data, 0, nRead);
+                }
+                link.setFileData(buffer.toByteArray());
+            }
+        } else {
+            String url = sanitize(req.getParameter("url"));
+            if (url.isEmpty()) {
+                throw new ServletException("Please enter a URL or upload a PDF.");
+            }
+            link.setUrl(url);
         }
-        String url = sanitize(req.getParameter("url"));
-        if (url.isEmpty()) {
-            throw new ServletException("Please enter a URL or upload a PDF.");
-        }
-        return url;
-    }
-
-    private String savePdf(Part pdf) throws IOException, ServletException {
-        String submittedName = Paths.get(pdf.getSubmittedFileName()).getFileName().toString();
-        if (!submittedName.toLowerCase().endsWith(".pdf")) {
-            throw new ServletException("Only PDF files can be uploaded for material links.");
-        }
-
-        String baseName = submittedName.substring(0, submittedName.length() - 4)
-                .replaceAll("[^A-Za-z0-9_-]+", "-")
-                .replaceAll("^-+|-+$", "");
-        if (baseName.isEmpty()) {
-            baseName = "material";
-        }
-
-        String fileName = baseName + "-" + System.currentTimeMillis() + ".pdf";
-        String uploadPath = getServletContext().getRealPath("/uploads/materials");
-        File uploadDir = new File(uploadPath);
-        if (!uploadDir.exists() && !uploadDir.mkdirs()) {
-            throw new IOException("Unable to create upload directory: " + uploadPath);
-        }
-
-        pdf.write(new File(uploadDir, fileName).getAbsolutePath());
-        return "/uploads/materials/" + fileName;
+        return link;
     }
 
     private String sanitize(String value) {

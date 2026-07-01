@@ -7,6 +7,9 @@ public class MaterialLink {
     private String url;
     private int sortOrder;
     private boolean enabled;
+    private byte[] fileData;
+    private String fileName;
+    private String fileType;
 
     public MaterialLink() {}
 
@@ -31,4 +34,10 @@ public class MaterialLink {
     public void setSortOrder(int sortOrder) { this.sortOrder = sortOrder; }
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    public byte[] getFileData() { return fileData; }
+    public void setFileData(byte[] fileData) { this.fileData = fileData; }
+    public String getFileName() { return fileName; }
+    public void setFileName(String fileName) { this.fileName = fileName; }
+    public String getFileType() { return fileType; }
+    public void setFileType(String fileType) { this.fileType = fileType; }
 }

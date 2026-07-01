@@ -1,15 +1,14 @@
 [
   {
-    "username": "charlie_new",
     "password": "Password123!",
     "fullName": "Charlie New Student",
     "email": "charlie_new@railtrack.local",
     "department": "Computer Science",
     "role": "STUDENT",
-    "cgpa": 3.85
+    "cgpa": 3.85,
+    "semester": "2025/2026-1"
   },
   {
-    "username": "ali_new",
     "password": "Password123!",
     "fullName": "Ali New Supervisor",
     "email": "ali_new@railtrack.local",

@@ -194,7 +194,8 @@
                         <div class="col-6">
                             <label class="form-label fw-semibold" style="font-size:.83rem;">Semester</label>
                             <input type="text" readonly name="semester" id="projSemester" class="form-control bg-light"
-                                   placeholder="2024/2025-1">
+                                   value="${not empty currentUser.semester ? currentUser.semester : ''}"
+                                   placeholder="e.g. 2025/2026-2">
                         </div>
                     </div>
                 </div>

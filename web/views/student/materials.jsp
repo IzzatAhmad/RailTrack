@@ -52,6 +52,10 @@
     <a href="<%= dashboardUrl %>" style="color:var(--rt-primary);text-decoration:none;">
         <i class="bi bi-house me-1"></i>Dashboard
     </a>
+    <% if ("COORDINATOR".equals(role)) { %>
+    <span class="mx-1" style="color:var(--rt-muted);">/</span>
+    <a href="<%= ctx %>/coordinator/menu" style="color:var(--rt-primary);text-decoration:none;">Student Menu Management</a>
+    <% } %>
     <span class="mx-1" style="color:var(--rt-muted);">/</span>
     <span style="color:var(--rt-muted);">Materials</span>
 </nav>

@@ -55,9 +55,6 @@
                 </div>
             </div>
         </div>
-        <a href="<%= ctx %>/supervisor/students" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>Back to List
-        </a>
     </div>
 </div>
 
@@ -70,7 +67,7 @@
         <p class="small text-muted mb-0">The student has not submitted any logbook entries yet.</p>
     </div>
     <% } else { %>
-    <div class="position-relative ps-4" style="border-left: 2px solid var(--rt-border); margin-left: 10px;">
+    <div class="position-relative ps-4" style="border-left: 2px solid var(--rt-border); margin-left: 45px;">
         <% 
             java.time.LocalDate lastDate = null;
             for (LogbookEntry entry : entries) {
@@ -145,14 +142,14 @@
                 <% if (entry.getImages() != null && !entry.getImages().isEmpty()) { %>
                 <div class="row g-2 mt-3 mb-2">
                     <% for (LogbookImage img : entry.getImages()) { %>
-                    <div class="col-6 col-sm-4 col-md-3">
-                        <a href="<%= ctx %>/file/image/<%= img.getId() %>" target="_blank" title="<%= img.getFileName() %>">
-                            <img src="<%= ctx %>/file/image/<%= img.getId() %>"
-                                 class="img-fluid rounded border shadow-sm"
-                                 style="max-height: 120px; object-fit: cover; width: 100%; cursor: pointer;"
-                                 alt="<%= img.getFileName() %>" />
-                        </a>
-                    </div>
+                      <div class="col-6 col-sm-4 col-md-3">
+                          <a href="javascript:void(0);" onclick="showImagePopup('<%= ctx %>/file/image/<%= img.getId() %>')" title="<%= img.getFileName() %>">
+                              <img src="<%= ctx %>/file/image/<%= img.getId() %>"
+                                   class="img-fluid rounded border shadow-sm"
+                                   style="max-height: 120px; object-fit: cover; width: 100%; cursor: pointer;"
+                                   alt="<%= img.getFileName() %>" />
+                          </a>
+                      </div>
                     <% } %>
                 </div>
                 <% } %>
@@ -166,5 +163,26 @@
     </div>
     <% } %>
 </div>
+
+<!-- Minimalist Image Popup Modal -->
+<div class="modal fade" id="imagePopupModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl" style="max-width: 90vw;">
+    <div class="modal-content bg-transparent border-0 shadow-none">
+      <div class="modal-body text-center p-0 position-relative">
+        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close" style="z-index: 1055; filter: drop-shadow(0px 0px 4px rgba(0,0,0,0.8));"></button>
+        <img id="popupImage" src="" class="img-fluid rounded" style="max-height: 90vh; cursor: zoom-out; object-fit: contain;" data-bs-dismiss="modal" />
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function showImagePopup(src) {
+    document.getElementById('popupImage').src = src;
+    var modal = new bootstrap.Modal(document.getElementById('imagePopupModal'));
+    modal.show();
+}
+</script>
 
 <jsp:include page="/views/common/footer.jsp"/>

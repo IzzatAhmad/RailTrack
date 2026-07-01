@@ -53,18 +53,23 @@ public class LoginServlet extends HttpServlet {
  
         try {
             User user = authService.login(req, username, password);
- 
+
             if (user == null) {
-                resp.sendRedirect(req.getContextPath() + "/?error=invalid");
+                int fails = AuthService.getFailedLoginAttempts(req);
+                String redirect = req.getContextPath() + "/?error=invalid&fails=" + fails;
+                if (fails >= AuthService.MAX_FAILED_ATTEMPTS) {
+                    redirect += "&offer_reset=true";
+                }
+                resp.sendRedirect(redirect);
                 return;
             }
- 
+
             resp.sendRedirect(dashboardUrl(req));
- 
+
         } catch (IllegalArgumentException e) {
             String encoded = java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8.toString());
             resp.sendRedirect(req.getContextPath() + "/?error=" + encoded);
- 
+
         } catch (Exception e) {
             e.printStackTrace();
             getServletContext().log("Login error", e);

@@ -33,6 +33,46 @@
     }
 
     String msg = request.getParameter("msg");
+
+    // Failed-attempt tracking
+    boolean offerReset = "true".equals(request.getParameter("offer_reset"));
+    String  failsParam  = request.getParameter("fails");
+    int     failCount   = 0;
+    try { if (failsParam != null) failCount = Integer.parseInt(failsParam); } catch (NumberFormatException ignored) {}
+
+    // Token-based reset form
+    String resetToken = request.getParameter("token");
+    String resetError = ("reset_form".equals(request.getParameter("action"))) ? loginError : null;
+
+    // Retrieve form data if available
+    String regFullName = "";
+    String regEmail = "";
+    String regDepartment = "";
+    String regUsername = "";
+    String regRole = "";
+    if (session != null && "reg_error".equals(errorParam)) {
+        regFullName = session.getAttribute("reg_fullName") != null ? (String) session.getAttribute("reg_fullName") : "";
+        regEmail = session.getAttribute("reg_email") != null ? (String) session.getAttribute("reg_email") : "";
+        regDepartment = session.getAttribute("reg_department") != null ? (String) session.getAttribute("reg_department") : "";
+        regUsername = session.getAttribute("reg_username") != null ? (String) session.getAttribute("reg_username") : "";
+        regRole = session.getAttribute("reg_role") != null ? (String) session.getAttribute("reg_role") : "";
+
+        session.removeAttribute("reg_fullName");
+        session.removeAttribute("reg_email");
+        session.removeAttribute("reg_department");
+        session.removeAttribute("reg_username");
+        session.removeAttribute("reg_role");
+    }
+
+    String valStudentFullName = ("STUDENT".equals(regRole) || regRole.isEmpty()) ? regFullName.replace("\"", "&quot;") : "";
+    String valStudentUsername = ("STUDENT".equals(regRole) || regRole.isEmpty()) ? regUsername.replace("\"", "&quot;") : "";
+    String valStudentEmail = ("STUDENT".equals(regRole) || regRole.isEmpty()) ? regEmail.replace("\"", "&quot;") : "";
+    String valStudentDept = ("STUDENT".equals(regRole) || regRole.isEmpty()) ? regDepartment : "";
+
+    String valSuperFullName = "SUPERVISOR".equals(regRole) ? regFullName.replace("\"", "&quot;") : "";
+    String valSuperUsername = "SUPERVISOR".equals(regRole) ? regUsername.replace("\"", "&quot;") : "";
+    String valSuperEmail = "SUPERVISOR".equals(regRole) ? regEmail.replace("\"", "&quot;") : "";
+    String valSuperDept = "SUPERVISOR".equals(regRole) ? regDepartment : "";
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -601,17 +641,39 @@
                 <span>RailTrack <small>FYP Management</small></span>
             </a>
             <div class="rt-nav-spacer"></div>
-            <div class="rt-nav-links">
-                <a href="#problem">Problem</a>
-                <a href="#solution">Solution</a>
-                <a href="#workflow">Workflow</a>
-                <a href="#roles">Roles</a>
+            
+            <div class="d-none d-md-flex align-items-center">
+                <div class="rt-nav-links me-3">
+                    <a href="#problem">Problem</a>
+                    <a href="#solution">Solution</a>
+                    <a href="#workflow">Workflow</a>
+                    <a href="#roles">Roles</a>
+                </div>
+                <button onclick="openLogin()" class="btn btn-primary btn-sm"
+                        style="border-radius:7px;font-weight:600;padding:.4rem 1.1rem;">
+                    <i class="bi bi-box-arrow-in-right me-1"></i>Sign In
+                </button>
             </div>
-            <button onclick="openLogin()" class="btn btn-primary btn-sm ms-3"
-                    style="border-radius:7px;font-weight:600;padding:.4rem 1.1rem;">
-                <i class="bi bi-box-arrow-in-right me-1"></i>Sign In
+            
+            <button class="btn btn-sm d-md-none border-0 ms-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#indexOffcanvasNav" aria-controls="indexOffcanvasNav">
+                <i class="bi bi-list fs-3 text-dark"></i>
             </button>
         </nav>
+
+        <!-- Offcanvas Mobile Menu -->
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="indexOffcanvasNav" aria-labelledby="indexOffcanvasNavLabel">
+            <div class="offcanvas-header border-bottom">
+                <h5 class="offcanvas-title fw-bold" id="indexOffcanvasNavLabel">Menu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body d-flex flex-column gap-3">
+                <a href="#problem" class="text-decoration-none text-dark fw-medium" data-bs-dismiss="offcanvas">Problem</a>
+                <a href="#solution" class="text-decoration-none text-dark fw-medium" data-bs-dismiss="offcanvas">Solution</a>
+                <a href="#workflow" class="text-decoration-none text-dark fw-medium" data-bs-dismiss="offcanvas">Workflow</a>
+                <a href="#roles" class="text-decoration-none text-dark fw-medium" data-bs-dismiss="offcanvas">Roles</a>
+                <button onclick="openLogin()" class="btn btn-primary w-100 mt-2" data-bs-dismiss="offcanvas">Sign In</button>
+            </div>
+        </div>
 
         <!-- ── Hero ── -->
         <section class="hero">
@@ -887,17 +949,40 @@
                     <p class="text-muted" style="font-size:.82rem;margin-top:.25rem;">Enter your credentials to keep this journey on Railtrack</p>
                 </div>
 
+                <%-- ── Login error + reset hint ── --%>
                 <% if ("logged_out".equals(msg)) { %>
                 <div class="alert alert-success py-2 px-3 mb-3" style="font-size:.83rem;border-radius:8px;">
                     <i class="bi bi-check-circle-fill me-1"></i> You have been signed out successfully.
                 </div>
                 <% } %>
 
+                <% if ("reset_sent".equals(msg)) { %>
+                <div class="alert alert-info py-2 px-3 mb-3" style="font-size:.83rem;border-radius:8px;">
+                    <i class="bi bi-envelope-check me-1"></i>
+                    If that email is registered, a reset link has been sent. Check your inbox.
+                </div>
+                <% } %>
+
+                <% if ("password_reset".equals(msg)) { %>
+                <div class="alert alert-success py-2 px-3 mb-3" style="font-size:.83rem;border-radius:8px;">
+                    <i class="bi bi-check-circle-fill me-1"></i>
+                    Password changed successfully. You can now sign in.
+                </div>
+                <% } %>
+
                 <% if (loginError != null) {%>
                 <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:.83rem;border-radius:8px;">
                     <i class="bi bi-exclamation-circle me-1"></i><%= loginError%>
+                    <% if (offerReset) { %>
+                    <div class="mt-2" style="font-size:.80rem;">
+                        <i class="bi bi-key me-1"></i>Too many failed attempts.
+                        <a href="#" onclick="switchToResetRequest(); return false;" style="color:var(--rt-primary);font-weight:600;">
+                            Reset your password
+                        </a>
+                    </div>
+                    <% } %>
                 </div>
-                <% }%>
+                <% } %>
 
                 <form method="post" action="<%= ctx%>/login">
                     <div class="mb-3">
@@ -925,10 +1010,93 @@
                         <i class="bi bi-box-arrow-in-right me-1"></i>Sign In
                     </button>
                 </form>
-                <div class="text-center mt-3" style="font-size:.8rem;">
-                    New user?
-                    <a href="#" onclick="switchToRegister()">Create an account</a>
+                <div class="text-center mt-2" style="font-size:.80rem;">
+                    <a href="#" onclick="switchToResetRequest(); return false;" style="color:var(--rt-muted);">Forgot password?</a>
                 </div>
+                <div class="text-center mt-2" style="font-size:.8rem;">
+                    <a href="#" onclick="switchToAdminAccess()" style="color:var(--rt-muted);text-decoration:none;">
+                        <i class="bi bi-shield-lock me-1"></i>Admin Access
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ── Reset Password Request Modal ── -->
+        <div class="rt-modal-overlay" id="resetRequestOverlay">
+            <div class="rt-modal" id="resetRequestModal">
+                <button class="rt-modal-close" onclick="closeResetRequest()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                <div class="text-center mb-4">
+                    <img src="<%= ctx%>/img/roadway.gif" alt="RailTrack"
+                         style="width:44px;height:44px;object-fit:cover;border-radius:50%;margin-bottom:.75rem;">
+                    <h5 class="fw-bold mb-0">Reset Password</h5>
+                    <p class="text-muted" style="font-size:.82rem;margin-top:.25rem;">Enter your registered email to receive a reset link</p>
+                </div>
+                <form method="post" action="<%= ctx%>/reset-password">
+                    <input type="hidden" name="action" value="request_reset">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size:.83rem;">Email Address</label>
+                        <input type="email" name="email" class="form-control" required
+                               placeholder="your@email.com" autocomplete="email"/>
+                    </div>
+                    <div class="mb-4 d-flex justify-content-center">
+                        <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
+                    </div>
+                    <button type="submit" class="btn-login">
+                        <i class="bi bi-envelope me-1"></i>Send Reset Link
+                    </button>
+                </form>
+                <div class="text-center mt-3" style="font-size:.8rem;">
+                    <a href="#" onclick="switchToLogin()">Back to Sign In</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Set New Password Modal (token-based) ── -->
+        <div class="rt-modal-overlay" id="resetFormOverlay">
+            <div class="rt-modal" id="resetFormModal">
+                <button class="rt-modal-close" onclick="closeResetForm()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                <div class="text-center mb-4">
+                    <img src="<%= ctx%>/img/roadway.gif" alt="RailTrack"
+                         style="width:44px;height:44px;object-fit:cover;border-radius:50%;margin-bottom:.75rem;">
+                    <h5 class="fw-bold mb-0">Set New Password</h5>
+                    <p class="text-muted" style="font-size:.82rem;margin-top:.25rem;">Choose a strong password to protect your account</p>
+                </div>
+                <% if (resetError != null) { %>
+                <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:.83rem;border-radius:8px;">
+                    <i class="bi bi-exclamation-circle me-1"></i><%= resetError %>
+                </div>
+                <% } %>
+                <form method="post" action="<%= ctx%>/reset-password" id="resetFormForm">
+                    <input type="hidden" name="action" value="do_reset">
+                    <input type="hidden" name="token" id="resetTokenInput" value="<%= resetToken != null ? resetToken : ""%>">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size:.83rem;">New Password</label>
+                        <div class="position-relative">
+                            <input type="password" name="newPassword" id="newPasswordInput"
+                                   class="form-control" required minlength="8"
+                                   placeholder="At least 8 chars, upper + lower + digit"
+                                   autocomplete="new-password"/>
+                            <button type="button" onclick="toggleNewPassword()"
+                                    style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);
+                                    background:none;border:none;color:var(--rt-muted);cursor:pointer;padding:0;">
+                                <i class="bi bi-eye" id="newEyeIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold" style="font-size:.83rem;">Confirm Password</label>
+                        <input type="password" id="confirmNewPassword" class="form-control" required
+                               placeholder="Repeat your new password" autocomplete="new-password"/>
+                    </div>
+                    <button type="submit" class="btn-login" onclick="return validateNewPasswords()">
+                        <i class="bi bi-lock me-1"></i>Change Password
+                    </button>
+                </form>
             </div>
         </div>
 
@@ -964,35 +1132,154 @@
                         <input type="text" name="role" class="form-control" value="STUDENT" hidden>
                     </div>
                     <div class="mb-2">
-                        <input type="text" name="fullName" class="form-control" placeholder="Full Name" required>
+                        <input type="text" name="fullName" class="form-control" placeholder="Full Name" value="<%= valStudentFullName %>" required>
                     </div>
 
                     <div class="mb-2">
-                        <input type="text" name="username" class="form-control bg-light" placeholder="Username" readonly="">
+                        <input type="text" name="username" class="form-control bg-light" placeholder="Username" value="<%= valStudentUsername %>" readonly="">
                     </div>
 
                     <div class="mb-2">
-                        <input type="email" name="email" class="form-control" placeholder="Email" required>
+                        <input type="email" name="email" class="form-control" placeholder="Email" value="<%= valStudentEmail %>" required>
                     </div>
 
                     <div class="mb-2">
                         <label class="form-label">Department</label>
                         <select name="department" class="form-select" required>
-                            <option value="SMSK(KP)">SMSK(KP)</option>
-                            <option value="SMSKdIM(K)">SMSKdIM(K)</option>
+                            <option value="SMSK(KP)" <%= "SMSK(KP)".equals(valStudentDept) ? "selected" : "" %>>SMSK(KP)</option>
+                            <option value="SMSKdIM(K)" <%= "SMSKdIM(K)".equals(valStudentDept) ? "selected" : "" %>>SMSKdIM(K)</option>
                         </select>
                     </div>
 
-                    <div class="mb-2">
+                    <div class="mb-2 position-relative">
                         <input type="password" name="password" class="form-control" placeholder="Password" required>
+                        <button type="button" onclick="toggleRegVisibility(this)"
+                                style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);
+                                background:none;border:none;color:var(--rt-muted);cursor:pointer;padding:0;z-index:10;">
+                            <i class="bi bi-eye"></i>
+                        </button>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-3 position-relative">
                         <input type="password" name="confirmPassword" class="form-control" placeholder="Confirm Password" required>
+                        <button type="button" onclick="toggleRegVisibility(this)"
+                                style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);
+                                background:none;border:none;color:var(--rt-muted);cursor:pointer;padding:0;z-index:10;">
+                            <i class="bi bi-eye"></i>
+                        </button>
                     </div>
 
                     <button type="submit" class="btn-login">
                         <i class="bi bi-person-plus me-1"></i>Create Account
+                    </button>
+                </form>
+
+                <div class="text-center mt-3" style="font-size:.8rem;">
+                    Already have an account?
+                    <a href="#" onclick="switchToLogin()">Sign in</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Admin Access Verification Modal ── -->
+        <div class="rt-modal-overlay" id="adminAccessOverlay">
+            <div class="rt-modal" id="adminAccessModal">
+                <button class="rt-modal-close" onclick="closeAdminAccess()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                <div class="text-center mb-4">
+                    <img src="<%= ctx%>/img/roadway.gif" alt="RailTrack"
+                         style="width:44px;height:44px;object-fit:cover;border-radius:50%;margin-bottom:.75rem;">
+                    <h5 class="fw-bold mb-0">Admin Access Verification</h5>
+                    <p class="text-muted" style="font-size:.82rem;margin-top:.25rem;">Enter the admin code to continue</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" style="font-size:.83rem;">Access Code</label>
+                    <input type="password" id="adminCodeInput" class="form-control" required
+                           placeholder="Enter admin code"/>
+                </div>
+                <button type="button" class="btn-login" onclick="verifyAdminCode()">
+                    <i class="bi bi-shield-check me-1"></i>Verify Code
+                </button>
+                <div class="text-center mt-3" style="font-size:.8rem;">
+                    <a href="#" onclick="switchToLogin()">Back to Sign In</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Supervisor Register Modal ── -->
+        <div class="rt-modal-overlay" id="supervisorRegisterOverlay">
+            <div class="rt-modal" id="supervisorRegisterModal">
+                <button class="rt-modal-close" onclick="closeSupervisorRegister()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+
+                <div class="text-center mb-4">
+                    <img src="<%= ctx%>/img/roadway.gif" alt="RailTrack"
+                         style="width:44px;height:44px;object-fit:cover;border-radius:50%;margin-bottom:.75rem;">
+                    <h5 class="fw-bold mb-0">Supervisor Registration</h5>
+                    <p class="text-muted" style="font-size:.82rem;margin-top:.25rem;">Admin access required</p>
+                </div>
+
+                <% if ("reg_error".equals(errorParam)) {%>
+                <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:.83rem;border-radius:8px;">
+                    <%= request.getParameter("msg")%>
+                </div>
+                <% } %>
+
+                <% if ("registered".equals(msg)) { %>
+                <div class="alert alert-success py-2 px-3 mb-3" style="font-size:.83rem;border-radius:8px;">
+                    <i class="bi bi-check-circle-fill me-1"></i>
+                    Account created. You can sign in now.
+                </div>
+                <% }%>
+
+                <form method="post" action="<%= ctx%>/register">
+                    <div class="mb-2">
+                        <input type="hidden" name="role" value="SUPERVISOR">
+                        <input type="hidden" name="adminCode" id="hiddenAdminCode">
+                    </div>
+
+                    <div class="mb-2">
+                        <input type="text" name="fullName" class="form-control" placeholder="Full Name" value="<%= valSuperFullName %>" required>
+                    </div>
+
+                    <div class="mb-2">
+                        <input type="text" name="username" class="form-control bg-light" placeholder="Username" value="<%= valSuperUsername %>" readonly="">
+                    </div>
+
+                    <div class="mb-2">
+                        <input type="email" name="email" class="form-control" placeholder="Email" value="<%= valSuperEmail %>" required>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label">Department</label>
+                        <select name="department" class="form-select" required>
+                            <option value="SMSK(KP)" <%= "SMSK(KP)".equals(valSuperDept) ? "selected" : "" %>>SMSK(KP)</option>
+                            <option value="SMSKdIM(K)" <%= "SMSKdIM(K)".equals(valSuperDept) ? "selected" : "" %>>SMSKdIM(K)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-2 position-relative">
+                        <input type="password" name="password" class="form-control" placeholder="Password" required>
+                        <button type="button" onclick="toggleRegVisibility(this)"
+                                style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);
+                                background:none;border:none;color:var(--rt-muted);cursor:pointer;padding:0;z-index:10;">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+
+                    <div class="mb-3 position-relative">
+                        <input type="password" name="confirmPassword" class="form-control" placeholder="Confirm Password" required>
+                        <button type="button" onclick="toggleRegVisibility(this)"
+                                style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);
+                                background:none;border:none;color:var(--rt-muted);cursor:pointer;padding:0;z-index:10;">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+
+                    <button type="submit" class="btn-login">
+                        <i class="bi bi-person-plus me-1"></i>Create Supervisor Account
                     </button>
                 </form>
 
@@ -1020,11 +1307,21 @@
 
                         function switchToLogin() {
                             closeRegister();
+                            closeResetRequest();
+                            closeResetForm();
+                            if (typeof closeAdminAccess === 'function') closeAdminAccess();
+                            if (typeof closeSupervisorRegister === 'function') closeSupervisorRegister();
                             openLogin();
                         }
                         function switchToRegister() {
                             openRegister();
                             closeLogin();
+                        }
+                        function switchToResetRequest() {
+                            closeLogin();
+                            closeRegister();
+                            closeResetForm();
+                            openResetRequest();
                         }
 
 // Close on outside click
@@ -1035,6 +1332,97 @@
                         regModal.addEventListener('mousedown', function (e) {
                             e.stopPropagation();
                         });
+
+                        var supRegOverlay = document.getElementById('supervisorRegisterOverlay');
+                        var supRegModal = document.getElementById('supervisorRegisterModal');
+
+                        function openSupervisorRegister() {
+                            if(supRegOverlay) {
+                                supRegOverlay.classList.add('open');
+                                document.body.style.overflow = 'hidden';
+                            }
+                        }
+
+                        function closeSupervisorRegister() {
+                            if(supRegOverlay) {
+                                supRegOverlay.classList.remove('open');
+                                document.body.style.overflow = '';
+                            }
+                        }
+
+                        function switchToSupervisorRegister() {
+                            closeLogin();
+                            closeRegister();
+                            closeResetRequest();
+                            closeResetForm();
+                            if (typeof closeAdminAccess === 'function') closeAdminAccess();
+                            openSupervisorRegister();
+                        }
+
+                        var adminAccOverlay = document.getElementById('adminAccessOverlay');
+                        var adminAccModal = document.getElementById('adminAccessModal');
+
+                        function openAdminAccess() {
+                            if(adminAccOverlay) {
+                                adminAccOverlay.classList.add('open');
+                                document.body.style.overflow = 'hidden';
+                                setTimeout(() => {
+                                    var u = document.getElementById('adminCodeInput');
+                                    if (u) u.focus();
+                                }, 100);
+                            }
+                        }
+
+                        function closeAdminAccess() {
+                            if(adminAccOverlay) {
+                                adminAccOverlay.classList.remove('open');
+                                document.body.style.overflow = '';
+                                document.getElementById('adminCodeInput').value = '';
+                            }
+                        }
+
+                        function switchToAdminAccess() {
+                            closeLogin();
+                            closeRegister();
+                            closeResetRequest();
+                            closeResetForm();
+                            if (typeof closeSupervisorRegister === 'function') closeSupervisorRegister();
+                            openAdminAccess();
+                        }
+                        
+                        function verifyAdminCode() {
+                            var code = document.getElementById('adminCodeInput').value;
+                            if (code === 'admin123') {
+                                document.getElementById('hiddenAdminCode').value = code;
+                                switchToSupervisorRegister();
+                            } else {
+                                alert('Invalid admin access code.');
+                            }
+                        }
+                        
+                        if(adminAccOverlay) {
+                            adminAccOverlay.addEventListener('mousedown', function (e) {
+                                if (e.target === adminAccOverlay) closeAdminAccess();
+                            });
+                        }
+                        if(adminAccModal) {
+                            adminAccModal.addEventListener('mousedown', function (e) {
+                                e.stopPropagation();
+                            });
+                        }
+
+                        if(supRegOverlay) {
+                            supRegOverlay.addEventListener('mousedown', function (e) {
+                                if (e.target === supRegOverlay)
+                                    closeSupervisorRegister();
+                            });
+                        }
+                        if(supRegModal) {
+                            supRegModal.addEventListener('mousedown', function (e) {
+                                e.stopPropagation();
+                            });
+                        }
+
                         var overlay = document.getElementById('loginOverlay');
                         var modal = document.getElementById('loginModal');
 
@@ -1077,12 +1465,82 @@
                             }
                         }
 
+                        function toggleRegVisibility(btn) {
+                            var input = btn.previousElementSibling;
+                            var icon = btn.querySelector('i');
+                            if (input.type === 'password') {
+                                input.type = 'text';
+                                icon.className = 'bi bi-eye-slash';
+                            } else {
+                                input.type = 'password';
+                                icon.className = 'bi bi-eye';
+                            }
+                        }
+
+                        // ── Reset Request Modal ────────────────────────────────
+                        var resetReqOverlay = document.getElementById('resetRequestOverlay');
+                        var resetReqModal   = document.getElementById('resetRequestModal');
+                        function openResetRequest() {
+                            resetReqOverlay.classList.add('open');
+                            document.body.style.overflow = 'hidden';
+                            setTimeout(() => { var e = resetReqModal.querySelector('input[name="email"]'); if(e) e.focus(); }, 100);
+                        }
+                        function closeResetRequest() {
+                            resetReqOverlay.classList.remove('open');
+                            document.body.style.overflow = '';
+                        }
+                        resetReqOverlay.addEventListener('mousedown', function(e) { if (e.target === resetReqOverlay) closeResetRequest(); });
+                        resetReqModal.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+
+                        // ── Reset Form Modal (set new password) ────────────────
+                        var resetFrmOverlay = document.getElementById('resetFormOverlay');
+                        var resetFrmModal   = document.getElementById('resetFormModal');
+                        function openResetForm() {
+                            resetFrmOverlay.classList.add('open');
+                            document.body.style.overflow = 'hidden';
+                        }
+                        function closeResetForm() {
+                            resetFrmOverlay.classList.remove('open');
+                            document.body.style.overflow = '';
+                        }
+                        resetFrmOverlay.addEventListener('mousedown', function(e) { if (e.target === resetFrmOverlay) closeResetForm(); });
+                        resetFrmModal.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+
+                        function toggleNewPassword() {
+                            var input = document.getElementById('newPasswordInput');
+                            var icon  = document.getElementById('newEyeIcon');
+                            if (input.type === 'password') {
+                                input.type = 'text';
+                                icon.className = 'bi bi-eye-slash';
+                            } else {
+                                input.type = 'password';
+                                icon.className = 'bi bi-eye';
+                            }
+                        }
+
+                        function validateNewPasswords() {
+                            var p1 = document.getElementById('newPasswordInput').value;
+                            var p2 = document.getElementById('confirmNewPassword').value;
+                            if (p1 !== p2) {
+                                alert('Passwords do not match. Please try again.');
+                                return false;
+                            }
+                            return true;
+                        }
+
                         document.addEventListener('keydown', function (e) {
-                            if (e.key === 'Escape')
+                            if (e.key === 'Escape') {
                                 closeLogin();
+                                closeRegister();
+                                closeResetRequest();
+                                closeResetForm();
+                                if (typeof closeAdminAccess === 'function') closeAdminAccess();
+                                if (typeof closeSupervisorRegister === 'function') closeSupervisorRegister();
+                            }
                         });
 
-            <% if (loginError != null || "logged_out".equals(msg) || "login".equals(request.getParameter("action"))) { %>
+            <% if (loginError != null || "logged_out".equals(msg) || "login".equals(request.getParameter("action"))
+                    || "reset_sent".equals(msg) || "password_reset".equals(msg)) { %>
                         if (document.readyState === 'loading') {
                             document.addEventListener('DOMContentLoaded', function () {
                                 openLogin();
@@ -1097,6 +1555,13 @@
                             }
                         }
             <% }%>
+            <% if ("reset_form".equals(request.getParameter("action")) && resetToken != null) { %>
+                        if (document.readyState === 'loading') {
+                            document.addEventListener('DOMContentLoaded', openResetForm);
+                        } else {
+                            openResetForm();
+                        }
+            <% } %>
             <% if ("reg_error".equals(errorParam) || "registered".equals(msg) || "register".equals(request.getParameter("action"))) { %>
                         if (document.readyState === 'loading') {
                             document.addEventListener('DOMContentLoaded', function () {
@@ -1106,29 +1571,30 @@
                             openRegister();
                         }
             <% }%>
-                        // Auto-fill username from email (register form)
+                        // Auto-fill username from email (register forms)
                         document.addEventListener("DOMContentLoaded", function () {
-                            const registerForm = document.querySelector('#registerModal');
-                            if (!registerForm)
-                                return;
+                            const forms = [document.querySelector('#registerModal'), document.querySelector('#supervisorRegisterModal')];
+                            forms.forEach(function(modal) {
+                                if (!modal) return;
+                                const emailInput = modal.querySelector('input[name="email"]');
+                                const usernameInput = modal.querySelector('input[name="username"]');
+                                if(!emailInput || !usernameInput) return;
 
-                            const emailInput = registerForm.querySelector('input[name="email"]');
-                            const usernameInput = registerForm.querySelector('input[name="username"]');
+                                let userEdited = false;
 
-                            let userEdited = false;
+                                // Detect if user manually edits username
+                                usernameInput.addEventListener("input", function () {
+                                    userEdited = usernameInput.value.trim().length > 0;
+                                });
 
-                            // Detect if user manually edits username
-                            usernameInput.addEventListener("input", function () {
-                                userEdited = usernameInput.value.trim().length > 0;
-                            });
+                                emailInput.addEventListener("input", function () {
+                                    const email = emailInput.value;
 
-                            emailInput.addEventListener("input", function () {
-                                const email = emailInput.value;
-
-                                if (!userEdited && email.includes("@")) {
-                                    const username = email.split("@")[0];
-                                    usernameInput.value = username;
-                                }
+                                    if (!userEdited && email.includes("@")) {
+                                        const username = email.split("@")[0];
+                                        usernameInput.value = username;
+                                    }
+                                });
                             });
                         });
         </script>

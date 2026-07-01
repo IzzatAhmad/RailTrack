@@ -265,9 +265,23 @@ public class MilestoneDAO {
 
     // ── Stats ─────────────────────────────────────────────────────────────────
 
+    /**
+     * Calculates the overall grade for a project using weight normalization.
+     *
+     * <p>Weights of approved milestones are summed and used as a divisor,
+     * so the result is always correctly scaled to 0–100 regardless of whether
+     * the coordinator-configured weights happen to sum to exactly 100%.
+     *
+     * <p>Formula: {@code SUM(grade * weight) / SUM(weight)}
+     *
+     * @param projectId the project to calculate the grade for
+     * @return normalized overall grade in the range 0–100, or 0.0 if no approved milestones
+     */
     public double calculateOverallGrade(int projectId) throws SQLException {
+        // Normalize overall grade based on sum of weights of approved milestones.
+        // If weights sum to 80% or 110%, they are mapped proportionally to a scale of 100.
         String sql =
-                "SELECT SUM((grade / 100.0) * weight) AS weighted_total " +
+                "SELECT SUM((grade * weight) / 100.0) / SUM(weight) * 100.0 AS normalized_grade " +
                 "FROM milestones " +
                 "WHERE project_id = ? AND status = 'APPROVED'";
 
@@ -278,7 +292,7 @@ public class MilestoneDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    double val = rs.getDouble("weighted_total");
+                    double val = rs.getDouble("normalized_grade");
                     return rs.wasNull() ? 0.0 : val;
                 }
                 return 0.0;

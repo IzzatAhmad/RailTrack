@@ -22,16 +22,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.io.File;
+
 @WebServlet("/thesis/upload")
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024,
-        maxFileSize       = 10L * 1024 * 1024 * 1024,   // 10 GB
-        maxRequestSize    = 11L * 1024 * 1024 * 1024    // 11 GB total
+        maxFileSize       = 50L * 1024 * 1024,   // 50 MB
+        maxRequestSize    = 60L * 1024 * 1024    // 60 MB total
 )
 public class ThesisUploadServlet extends HttpServlet {
 
     private final UserDAO userDAO = new UserDAO();
     private final DocumentDAO documentDAO = new DocumentDAO();
+
+    // The persistent storage location
+    private static final String UPLOAD_DIR = System.getProperty("user.home") + "/RailTrack_Storage/thesis_uploads";
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -100,25 +109,28 @@ public class ThesisUploadServlet extends HttpServlet {
                 .get(part.getSubmittedFileName())
                 .getFileName().toString();
 
-        byte[] data;
-        try (InputStream in = part.getInputStream()) {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            byte[] buffer = new byte[8192];
-            int len;
-            while ((len = in.read(buffer)) != -1) {
-                bos.write(buffer, 0, len);
-            }
-            data = bos.toByteArray();
-        }
-
         StudentDocument doc = new StudentDocument();
         doc.setStudentId(studentId);
         doc.setDocumentTypeId(type.getId());
         doc.setFileName(submittedName);
         doc.setContentType(mime);
-        doc.setFileSize(data.length);
+        doc.setFileSize((int) part.getSize());
 
-        documentDAO.saveStudentDocument(doc, data);
+        // Stream the file directly to persistent storage
+        File uploadDir = new File(UPLOAD_DIR);
+        if (!uploadDir.exists()) {
+            uploadDir.mkdirs();
+        }
+
+        String uniqueFileName = studentId + "_" + type.getId() + "_" + submittedName;
+        Path targetPath = Paths.get(UPLOAD_DIR, uniqueFileName);
+
+        try (InputStream in = part.getInputStream()) {
+            Files.copy(in, targetPath, StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        // Save metadata only
+        documentDAO.saveStudentDocumentMeta(doc);
     }
 
     @Override

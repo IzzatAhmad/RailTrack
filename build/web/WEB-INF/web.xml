@@ -44,6 +44,7 @@
     <session-config>
         <session-timeout>60</session-timeout>   <!-- minutes -->
         <cookie-config>
+            <name>RT_SESSIONID</name>
             <http-only>true</http-only>
             <secure>false</secure>              <!-- set true in production (HTTPS) -->
         </cookie-config>

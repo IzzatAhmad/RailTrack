@@ -65,6 +65,7 @@ public class SupervisorDashboardServlet extends HttpServlet {
             long completedCount = projects.stream().filter(p -> "COMPLETED".equals(p.getStatus().name())).count();
 
             req.setAttribute("projects", projects);
+            req.setAttribute("students", students);
             req.setAttribute("activeCount", activeCount);
             req.setAttribute("pendingCount", pendingCount);
             req.setAttribute("completedCount", completedCount);

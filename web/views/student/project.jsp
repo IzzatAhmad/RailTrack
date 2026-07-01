@@ -73,12 +73,56 @@
                                                     <%= ds %>
                                                 </span>
                                                 <% if (project.isRunning() && project.getPreviewUrl() !=null) { %>
-                                                    <a href="http://<%= request.getServerName() %>:<%= project.getContainerPort() %>" target="_blank"
-                                                        class="btn btn-sm btn-outline-success ms-auto">
-                                                        <i class="bi bi-box-arrow-up-right me-1"></i>Open App
-                                                    </a>
-                                                    <% } %>
+                                                    <div class="d-flex flex-column align-items-end ms-auto gap-2">
+                                                        <a href="http://<%= request.getServerName() %>:<%= project.getContainerPort() %>" target="_blank"
+                                                            class="btn btn-sm btn-outline-success w-100">
+                                                            <i class="bi bi-box-arrow-up-right me-1"></i>Open App
+                                                        </a>
+                                                        <div class="dropdown w-100">
+                                                            <button class="btn btn-sm btn-light border w-100 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                <i class="bi bi-share me-1"></i>Share
+                                                            </button>
+                                                            <div class="dropdown-menu dropdown-menu-end p-3 text-center shadow-sm" style="min-width: 200px;">
+                                                                <h6 class="dropdown-header px-0 text-dark fw-bold">Scan to open on mobile</h6>
+                                                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://<%= request.getServerName() %>:<%= project.getContainerPort() %>" alt="QR Code" class="img-fluid border rounded mb-3" width="150" height="150">
+                                                                <button class="btn btn-sm btn-primary w-100 mb-2" onclick="navigator.clipboard.writeText('http://<%= request.getServerName() %>:<%= project.getContainerPort() %>'); alert('Link copied to clipboard!');">
+                                                                    <i class="bi bi-link-45deg me-1"></i>Copy Link
+                                                                </button>
+                                                                <button class="btn btn-sm btn-outline-primary w-100" onclick="shareQRCode('http://<%= request.getServerName() %>:<%= project.getContainerPort() %>')">
+                                                                    <i class="bi bi-share me-1"></i>Share QR Code
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                <% } %>
                                             </div>
+                                            <script>
+                                            async function shareQRCode(url) {
+                                                try {
+                                                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=\${encodeURIComponent(url)}`;
+                                                    const response = await fetch(qrUrl);
+                                                    const blob = await response.blob();
+                                                    const file = new File([blob], 'qrcode.png', { type: blob.type });
+                                                    
+                                                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                                                        await navigator.share({
+                                                            files: [file],
+                                                            title: 'Project QR Code',
+                                                            text: 'Scan this QR code to open the project.'
+                                                        });
+                                                    } else {
+                                                        const a = document.createElement('a');
+                                                        a.href = URL.createObjectURL(blob);
+                                                        a.download = 'qrcode.png';
+                                                        a.click();
+                                                        URL.revokeObjectURL(a.href);
+                                                    }
+                                                } catch (err) {
+                                                    console.error('Error sharing:', err);
+                                                    alert('Sharing failed. Your browser might not support this feature.');
+                                                }
+                                            }
+                                            </script>
                                             <% if (project.getDescription() != null && !project.getDescription().trim().isEmpty()) { 
                                                 String descHtml = project.getDescription().trim()
                                                     .replace("\n", "<br/>")

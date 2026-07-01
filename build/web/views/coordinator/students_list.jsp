@@ -200,6 +200,8 @@
         <i class="bi bi-house me-1"></i>Dashboard
     </a>
     <span class="mx-1" style="color:var(--rt-muted);">/</span>
+    <a href="<%= ctx %>/coordinator/menu" style="color:var(--rt-primary);text-decoration:none;">Student Menu Management</a>
+    <span class="mx-1" style="color:var(--rt-muted);">/</span>
     <span style="color:var(--rt-muted);">Student List</span>
 </nav>
 
@@ -258,54 +260,56 @@
     </div>
 
     <!-- Students table for this supervisor -->
-    <table class="sl-table">
-        <thead>
-            <tr>
-                <th style="width:54px;">No.</th>
-                <th style="width:100px;">Matrik</th>
-                <th>Nama Pelajar</th>
-                <th style="width:130px;">Department</th>
-                <th>Tajuk Projek</th>
-            </tr>
-        </thead>
-        <tbody>
-        <%
-            int localRow = 1;
-            for (Project p : projects) {
-                boolean hasProject = p.getId() > 0 && p.getTitle() != null && !p.getTitle().isEmpty()
-                                     && !p.getTitle().startsWith("(No project");
-        %>
-            <tr>
-                <td class="sl-td-no"><%= localRow %>/<%= globalRow %></td>
-                <td class="sl-td-matrik">
-                    <% if (hasProject) { %>
-                    <a href="<%= ctx %>/coordinator/project?id=<%= p.getId() %>"
-                       title="View project"><%= p.getStudentUsername() != null ? p.getStudentUsername() : "—" %></a>
-                    <% } else { %>
-                    <span style="color:var(--rt-muted);font-size:.82rem;"><%= p.getStudentUsername() != null ? p.getStudentUsername() : "—" %></span>
-                    <% } %>
-                </td>
-                <td class="sl-td-name"><%= p.getStudentName() != null ? p.getStudentName() : "—" %></td>
-                <td class="sl-td-course">
-                    <%= p.getStudentDepartment() != null && !p.getStudentDepartment().isEmpty()
-                        ? p.getStudentDepartment() : "—" %>
-                </td>
-                <td class="sl-td-title">
-                    <% if (hasProject) { %>
-                    <a href="<%= ctx %>/coordinator/project?id=<%= p.getId() %>"
-                       title="<%= p.getTitle() %>"><%= p.getTitle() %></a>
-                    <% } else { %>
-                    <span class="sl-no-proj">Not added yet</span>
-                    <% } %>
-                </td>
-            </tr>
-        <%
-                localRow++;
-                globalRow++;
-            }
-        %>
-        </tbody>
-    </table>
+    <div class="table-responsive">
+        <table class="sl-table">
+            <thead>
+                <tr>
+                    <th style="width:54px;">No.</th>
+                    <th style="width:100px;">Matrik</th>
+                    <th>Nama Pelajar</th>
+                    <th style="width:130px;">Department</th>
+                    <th>Tajuk Projek</th>
+                </tr>
+            </thead>
+            <tbody>
+            <%
+                int localRow = 1;
+                for (Project p : projects) {
+                    boolean hasProject = p.getId() > 0 && p.getTitle() != null && !p.getTitle().isEmpty()
+                                         && !p.getTitle().startsWith("(No project");
+            %>
+                <tr>
+                    <td class="sl-td-no"><%= localRow %>/<%= globalRow %></td>
+                    <td class="sl-td-matrik">
+                        <% if (hasProject) { %>
+                        <a href="<%= ctx %>/coordinator/project?id=<%= p.getId() %>"
+                           title="View project"><%= p.getStudentUsername() != null ? p.getStudentUsername() : "—" %></a>
+                        <% } else { %>
+                        <span style="color:var(--rt-muted);font-size:.82rem;"><%= p.getStudentUsername() != null ? p.getStudentUsername() : "—" %></span>
+                        <% } %>
+                    </td>
+                    <td class="sl-td-name"><%= p.getStudentName() != null ? p.getStudentName() : "—" %></td>
+                    <td class="sl-td-course">
+                        <%= p.getStudentDepartment() != null && !p.getStudentDepartment().isEmpty()
+                            ? p.getStudentDepartment() : "—" %>
+                    </td>
+                    <td class="sl-td-title">
+                        <% if (hasProject) { %>
+                        <a href="<%= ctx %>/coordinator/project?id=<%= p.getId() %>"
+                           title="<%= p.getTitle() %>"><%= p.getTitle() %></a>
+                        <% } else { %>
+                        <span class="sl-no-proj">Not added yet</span>
+                        <% } %>
+                    </td>
+                </tr>
+            <%
+                    localRow++;
+                    globalRow++;
+                }
+            %>
+            </tbody>
+        </table>
+    </div>
     <%
             supIdx++;
             }

@@ -30,7 +30,10 @@ public class User {
     private boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime lastLogin;
+    private LocalDateTime lastActivity;
     private boolean emailNotifEnabled = true;
+    private String semester;
+    private boolean isBanned = false;
 
     public User() {
     }
@@ -57,6 +60,15 @@ public class User {
         return role == Role.COORDINATOR;
     }
 
+    /**
+     * Returns true if last_activity was updated within the last 5 minutes.
+     * Requires the lastActivity field to be populated (mapped from DB column).
+     */
+    public boolean isOnline() {
+        if (lastActivity == null) return false;
+        return lastActivity.isAfter(LocalDateTime.now().minusMinutes(5));
+    }
+
     public String getRoleLabel() {
         if (role == null) {
             return "Unknown";
@@ -81,6 +93,7 @@ public class User {
                 ? fullName.trim()
                 : (username != null ? username.trim() : "");
     }
+
     // ── Getters & Setters ─────────────────────────────────────────────────────
 
     public int getId() {
@@ -195,12 +208,36 @@ public class User {
         this.lastLogin = lastLogin;
     }
 
+    public LocalDateTime getLastActivity() {
+        return lastActivity;
+    }
+
+    public void setLastActivity(LocalDateTime lastActivity) {
+        this.lastActivity = lastActivity;
+    }
+
     public boolean isEmailNotifEnabled() {
         return emailNotifEnabled;
     }
 
     public void setEmailNotifEnabled(boolean emailNotifEnabled) {
         this.emailNotifEnabled = emailNotifEnabled;
+    }
+
+    public String getSemester() {
+        return semester;
+    }
+
+    public void setSemester(String semester) {
+        this.semester = semester;
+    }
+
+    public boolean isBanned() {
+        return isBanned;
+    }
+
+    public void setBanned(boolean isBanned) {
+        this.isBanned = isBanned;
     }
 
     @Override

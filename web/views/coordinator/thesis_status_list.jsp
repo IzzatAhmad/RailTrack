@@ -196,6 +196,8 @@
         <i class="bi bi-house me-1"></i>Dashboard
     </a>
     <span class="mx-1" style="color:var(--rt-muted);">/</span>
+    <a href="<%= ctx %>/coordinator/menu" style="color:var(--rt-primary);text-decoration:none;">Student Menu Management</a>
+    <span class="mx-1" style="color:var(--rt-muted);">/</span>
     <span style="color:var(--rt-muted);">Thesis Upload Status</span>
 </nav>
 
@@ -254,61 +256,63 @@
     </div>
 
     <!-- Students table for this supervisor -->
-    <table class="sl-table">
-        <thead>
-            <tr>
-                <th style="width:54px;">No.</th>
-                <th style="width:100px;">Matric</th>
-                <th>Name</th>
-                <th class="text-center">Thesis PDF</th>
-                <th class="text-center">Latex Zip</th>
-                <th class="text-center">Project Zip</th>
-            </tr>
-        </thead>
-        <tbody>
-        <%
-            int localRow = 1;
-            for (Project p : projects) {
-                Set<String> uploads = studentUploads.getOrDefault(p.getStudentId(), new HashSet<String>());
-        %>
-            <tr>
-                <td class="sl-td-no"><%= localRow %>/<%= globalRow %></td>
-                <td class="sl-td-matrik">
-                    <%= p.getStudentUsername() != null ? p.getStudentUsername() : "—" %>
-                </td>
-                <td class="sl-td-name"><%= p.getStudentName() != null ? p.getStudentName() : "—" %></td>
-                
-                <td class="text-center">
-                    <% if (uploads.contains("THESIS_PDF")) { %>
-                        <span class="status-badge status-yes"><i class="bi bi-check-lg"></i> Uploaded</span>
-                    <% } else { %>
-                        <span class="status-badge status-no">Pending</span>
-                    <% } %>
-                </td>
-                
-                <td class="text-center">
-                    <% if (uploads.contains("THESIS_LATEX_ZIP")) { %>
-                        <span class="status-badge status-yes"><i class="bi bi-check-lg"></i> Uploaded</span>
-                    <% } else { %>
-                        <span class="status-badge status-no">Pending</span>
-                    <% } %>
-                </td>
-                
-                <td class="text-center">
-                    <% if (uploads.contains("PROJECT_ZIP")) { %>
-                        <span class="status-badge status-yes"><i class="bi bi-check-lg"></i> Uploaded</span>
-                    <% } else { %>
-                        <span class="status-badge status-no">Pending</span>
-                    <% } %>
-                </td>
-            </tr>
-        <%
-                localRow++;
-                globalRow++;
-            }
-        %>
-        </tbody>
-    </table>
+    <div class="table-responsive">
+        <table class="sl-table">
+            <thead>
+                <tr>
+                    <th style="width:54px;">No.</th>
+                    <th style="width:100px;">Matric</th>
+                    <th>Name</th>
+                    <th class="text-center">Thesis PDF</th>
+                    <th class="text-center">Latex Zip</th>
+                    <th class="text-center">Project Zip</th>
+                </tr>
+            </thead>
+            <tbody>
+            <%
+                int localRow = 1;
+                for (Project p : projects) {
+                    Set<String> uploads = studentUploads.getOrDefault(p.getStudentId(), new HashSet<String>());
+            %>
+                <tr>
+                    <td class="sl-td-no"><%= localRow %>/<%= globalRow %></td>
+                    <td class="sl-td-matrik">
+                        <%= p.getStudentUsername() != null ? p.getStudentUsername() : "—" %>
+                    </td>
+                    <td class="sl-td-name"><%= p.getStudentName() != null ? p.getStudentName() : "—" %></td>
+                    
+                    <td class="text-center">
+                        <% if (uploads.contains("THESIS_PDF")) { %>
+                            <span class="status-badge status-yes"><i class="bi bi-check-lg"></i> Uploaded</span>
+                        <% } else { %>
+                            <span class="status-badge status-no">Pending</span>
+                        <% } %>
+                    </td>
+                    
+                    <td class="text-center">
+                        <% if (uploads.contains("THESIS_LATEX_ZIP")) { %>
+                            <span class="status-badge status-yes"><i class="bi bi-check-lg"></i> Uploaded</span>
+                        <% } else { %>
+                            <span class="status-badge status-no">Pending</span>
+                        <% } %>
+                    </td>
+                    
+                    <td class="text-center">
+                        <% if (uploads.contains("PROJECT_ZIP")) { %>
+                            <span class="status-badge status-yes"><i class="bi bi-check-lg"></i> Uploaded</span>
+                        <% } else { %>
+                            <span class="status-badge status-no">Pending</span>
+                        <% } %>
+                    </td>
+                </tr>
+            <%
+                    localRow++;
+                    globalRow++;
+                }
+            %>
+            </tbody>
+        </table>
+    </div>
     <%
             supIdx++;
             }

@@ -140,16 +140,77 @@ public class CoordinatorUserServlet extends HttpServlet {
                 return;
             }
 
-            // ── Single deactivate ─────────────────────────────────────────────
-            if ("deactivate".equals(action)) {
+            // ── Single Ban ───────────────────────────────────────────────────
+            if ("ban".equals(action)) {
                 int userId = Integer.parseInt(req.getParameter("id"));
                 if (userId == selfId) {
-                    req.setAttribute("formError", "You cannot deactivate your own account.");
+                    req.setAttribute("formError", "You cannot ban your own account.");
                     doGet(req, resp);
                     return;
                 }
-                userDAO.deactivate(userId);
-                resp.sendRedirect(req.getContextPath() + "/coordinator/users?success=deactivated");
+                userDAO.banUser(userId, true);
+                userDAO.deactivate(userId); // force logout as well
+                
+                try {
+                    User targetUser = userDAO.findById(userId);
+                    if (targetUser != null && targetUser.getEmail() != null) {
+                        String supName = targetUser.getSupervisorName();
+                        String contactMsg = (supName != null && !supName.isEmpty()) 
+                            ? "supervisor (" + supName + ") or coordinator" 
+                            : "coordinator";
+                        String subject = "Account Suspended";
+                        String body = "Dear " + targetUser.getFullName() + ",\n\n"
+                                    + "Your RailTrack account has been suspended.\n"
+                                    + "If you would like to request an unban, please contact your " + contactMsg + ".\n\n"
+                                    + "Regards,\nRailTrack System";
+                        com.railtrack.system.service.EmailService.sendEmailAsync(targetUser.getEmail(), subject, body);
+                    }
+                } catch (Exception ignored) {}
+                
+                resp.sendRedirect(req.getContextPath() + "/coordinator/users?success=banned");
+                return;
+            }
+
+            // ── Single Unban ─────────────────────────────────────────────────
+            if ("unban".equals(action)) {
+                int userId = Integer.parseInt(req.getParameter("id"));
+                userDAO.banUser(userId, false);
+                
+                try {
+                    User targetUser = userDAO.findById(userId);
+                    if (targetUser != null && targetUser.getEmail() != null) {
+                        String subject = "Account Restored";
+                        String body = "Dear " + targetUser.getFullName() + ",\n\n"
+                                    + "Good news! Your RailTrack account has been successfully restored and you can now log in again.\n\n"
+                                    + "Regards,\nRailTrack System";
+                        com.railtrack.system.service.EmailService.sendEmailAsync(targetUser.getEmail(), subject, body);
+                    }
+                } catch (Exception ignored) {}
+                
+                resp.sendRedirect(req.getContextPath() + "/coordinator/users?success=unbanned");
+                return;
+            }
+
+            // ── Change Role ──────────────────────────────────────────────────
+            if ("changeRole".equals(action)) {
+                int userId = Integer.parseInt(req.getParameter("id"));
+                if (userId == selfId) {
+                    req.setAttribute("formError", "You cannot change your own role.");
+                    doGet(req, resp);
+                    return;
+                }
+                String newRoleStr = req.getParameter("newRole");
+                if (newRoleStr != null) {
+                    try {
+                        User.Role newRole = User.Role.valueOf(newRoleStr.toUpperCase());
+                        userDAO.updateRole(userId, newRole);
+                        resp.sendRedirect(req.getContextPath() + "/coordinator/users?success=role_changed");
+                        return;
+                    } catch (IllegalArgumentException e) {
+                        req.setAttribute("formError", "Invalid role selected.");
+                    }
+                }
+                doGet(req, resp);
                 return;
             }
 
@@ -163,17 +224,6 @@ public class CoordinatorUserServlet extends HttpServlet {
                 }
                 userDAO.delete(userId);
                 resp.sendRedirect(req.getContextPath() + "/coordinator/users?success=deleted");
-                return;
-            }
-
-            // ── Bulk deactivate ───────────────────────────────────────────────
-            if ("bulkDeactivate".equals(action)) {
-                String[] rawIds = req.getParameterValues("ids");
-                List<Integer> ids = parseIds(rawIds, selfId);
-                if (!ids.isEmpty()) {
-                    userDAO.deactivateMultiple(ids);
-                }
-                resp.sendRedirect(req.getContextPath() + "/coordinator/users?success=bulk_deactivated");
                 return;
             }
 
@@ -209,6 +259,7 @@ public class CoordinatorUserServlet extends HttpServlet {
                     String rStr = req.getParameter("users[" + idx + "].role");
                     String actStr = req.getParameter("users[" + idx + "].active");
                     String cgpaStr = req.getParameter("users[" + idx + "].cgpa");
+                    String semesterStr = req.getParameter("users[" + idx + "].semester");
 
                     try {
                         if (ValidationUtil.isBlank(uName) ||
@@ -235,6 +286,12 @@ public class CoordinatorUserServlet extends HttpServlet {
                                 }
                             } catch (NumberFormatException e) {
                                 throw new IllegalArgumentException("Invalid CGPA format.");
+                            }
+                        }
+
+                        if (role == User.Role.STUDENT && ValidationUtil.notBlank(semesterStr)) {
+                            if (!ValidationUtil.isValidSemester(semesterStr)) {
+                                throw new IllegalArgumentException("Semester format invalid (e.g., 2025/2026-2).");
                             }
                         }
 
@@ -282,6 +339,9 @@ public class CoordinatorUserServlet extends HttpServlet {
                         user.setPhone(ValidationUtil.sanitise(phone));
                         user.setDepartment(ValidationUtil.sanitise(dept));
                         user.setCgpa(role == User.Role.STUDENT ? cgpa : null);
+                        if (role == User.Role.STUDENT && ValidationUtil.notBlank(semesterStr)) {
+                            user.setSemester(semesterStr.trim());
+                        }
                         user.setRole(role);
                         boolean active = !"false".equalsIgnoreCase(actStr);
                         user.setActive(active);
@@ -322,6 +382,7 @@ public class CoordinatorUserServlet extends HttpServlet {
             String department = req.getParameter("department");
             String roleStr    = req.getParameter("role");
             String cgpaStr    = req.getParameter("cgpa");
+            String semesterStr = req.getParameter("semester");
 
             User.Role role;
             try { role = User.Role.valueOf(roleStr); }
@@ -339,7 +400,18 @@ public class CoordinatorUserServlet extends HttpServlet {
                 }
             }
 
-            authService.register(username, password, fullName, email, department, role, cgpa);
+            if (role == User.Role.STUDENT && ValidationUtil.notBlank(semesterStr)) {
+                if (!ValidationUtil.isValidSemester(semesterStr)) {
+                    throw new IllegalArgumentException("Semester format invalid (e.g., 2025/2026-2).");
+                }
+            }
+
+            // authService.register might need update, or we do it here
+            User newUser = authService.register(username, password, fullName, email, department, role, cgpa);
+            if (role == User.Role.STUDENT && ValidationUtil.notBlank(semesterStr)) {
+                newUser.setSemester(semesterStr.trim());
+                userDAO.update(newUser);
+            }
             resp.sendRedirect(req.getContextPath() + "/coordinator/users?success=created");
 
         } catch (IllegalArgumentException e) {

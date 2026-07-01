@@ -125,18 +125,44 @@ public class DockerService {
         }
 
         try {
+            // Ensure student database exists in the host database
+            try (Connection conn = DBConnection.get();
+                 PreparedStatement ps = conn.prepareStatement("CREATE DATABASE IF NOT EXISTS student_db_" + pid)) {
+                ps.executeUpdate();
+            }
+
+            // Check for init.sql or railtrack.sql and execute it
+            String repoDir = (WORK_DIR + "/" + pid).replace("\\", "/");
+            java.io.File initSql = new java.io.File(repoDir, "init.sql");
+            java.io.File railtrackSql = new java.io.File(repoDir, "railtrack.sql");
+            java.io.File sqlToRun = initSql.exists() ? initSql : (railtrackSql.exists() ? railtrackSql : null);
+            String dbPass = System.getenv().getOrDefault("DB_PASSWORD", "");
+            String pFlag = dbPass.isEmpty() ? "" : "-p" + dbPass + " ";
+            
+            if (sqlToRun != null) {
+                // Pipe the SQL file into a transient MySQL container to execute it against the host DB
+                String sqlCmd = "cat \"" + sqlToRun.getAbsolutePath().replace("\\", "/") + "\" | docker run --rm -i mysql:8.0 mysql -h host.docker.internal -u root " + pFlag + "student_db_" + pid;
+                Result sqlResult = TerminalExecutor.executeShell(sqlCmd);
+                if (!sqlResult.success()) {
+                    System.err.println("Warning: Failed to execute " + sqlToRun.getName() + " for project " + pid + "\n" + sqlResult.combined());
+                }
+            }
+
             // Remove any stopped container with the same name before starting a new one.
             // This avoids the "container name already in use" conflict error.
             silentRemoveContainer(name);
 
-            int port = findFreePort();
-
             String cmd = "docker run -d"
                     + " --name " + name
-                    + " -p " + port + ":8080"
+                    + " -p 8080"
                     + " --memory=512m"
                     + " --cpus=1.0"
                     + " --restart=no"
+                    + " -e DB_HOST=host.docker.internal"
+                    + " -e DB_PORT=3306"
+                    + " -e DB_NAME=student_db_" + pid
+                    + " -e DB_USER=root"
+                    + " -e DB_PASSWORD=" + dbPass
                     + " " + imageTag;
 
             Result result = TerminalExecutor.execute(cmd);
@@ -154,6 +180,16 @@ public class DockerService {
             if (containerId.length() > 12) {
                 containerId = containerId.substring(0, 12);
             }
+
+            Result portResult = TerminalExecutor.execute("docker port " + name + " 8080");
+            if (!portResult.success()) {
+                throw new DockerException(pid, "port", "Failed to retrieve assigned port:\n" + portResult.combined());
+            }
+            
+            // Output is like "0.0.0.0:32768" or multiple lines
+            String portOutput = portResult.stdout.trim();
+            String firstLine = portOutput.split("\n")[0].trim();
+            int port = Integer.parseInt(firstLine.substring(firstLine.lastIndexOf(':') + 1));
 
             projectDAO.updateDockerInfo(pid, "running", containerId, port);
             deploymentLogDAO.log(pid, performedById,

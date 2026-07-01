@@ -254,6 +254,34 @@ public class DocumentDAO {
         }
     }
 
+    /**
+     * Insert or replace a student document metadata without saving file_data blob.
+     * Useful for persistent file storage outside DB.
+     */
+    public void saveStudentDocumentMeta(StudentDocument doc) throws SQLException {
+        String sql = "INSERT INTO student_documents " +
+                     "(student_id, document_type_id, file_name, content_type, file_size, file_data) " +
+                     "VALUES (?, ?, ?, ?, ?, NULL) " +
+                     "ON DUPLICATE KEY UPDATE " +
+                     "file_name = VALUES(file_name), content_type = VALUES(content_type), " +
+                     "file_size = VALUES(file_size)";
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, doc.getStudentId());
+            ps.setInt(2, doc.getDocumentTypeId());
+            ps.setString(3, doc.getFileName());
+            ps.setString(4, doc.getContentType());
+            ps.setInt(5, doc.getFileSize());
+            ps.executeUpdate();
+            
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    doc.setId(keys.getInt(1));
+                }
+            }
+        }
+    }
+
     public void deleteStudentDocument(int studentId, int typeId) throws SQLException {
         String sql = "DELETE FROM student_documents WHERE student_id = ? AND document_type_id = ?";
         try (Connection c = DBConnection.get();

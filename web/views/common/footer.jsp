@@ -32,6 +32,17 @@
 <!-- Global JS: filter buttons, flash messages, SSE badge refresh -->
 <script>
 (function () {
+    // ── Heartbeat: ping /heartbeat every 2 minutes to keep online status alive
+    (function () {
+        var ctxPath = '<%= request.getContextPath() %>';
+        function ping() {
+            fetch(ctxPath + '/heartbeat', { method: 'POST', credentials: 'same-origin' })
+                .catch(function() {}); // silently ignore network errors
+        }
+        ping(); // immediate ping on page load
+        setInterval(ping, 2 * 60 * 1000); // ping every 2 minutes
+    })();
+
     // ── Status filter buttons ─────────────────────────────────────────────────
     document.querySelectorAll('.rt-filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {

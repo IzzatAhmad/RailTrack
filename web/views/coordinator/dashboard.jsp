@@ -227,6 +227,7 @@
                             <a href="<%= ctx %>/coordinator/project" class="btn btn-sm btn-light border shadow-sm"><i class="bi bi-kanban text-primary me-1"></i> Projects</a>
                             <a href="<%= ctx %>/coordinator/menu" class="btn btn-sm btn-light border shadow-sm"><i class="bi bi-list-task text-primary me-1"></i> Student Menu</a>
                             <a href="<%= ctx %>/coordinator/logbook" class="btn btn-sm btn-light border shadow-sm"><i class="bi bi-book text-primary me-1"></i> Logbooks</a>
+                            <a href="<%= ctx %>/coordinator/databases" class="btn btn-sm btn-light border shadow-sm"><i class="bi bi-database text-primary me-1"></i> Databases</a>
                             <a href="<%= ctx %>/coordinator/docker" id="dockerMonitorBtn"
                                class="btn btn-sm btn-light border shadow-sm"
                                onclick="showDockerLoadingOverlay()">
@@ -236,6 +237,7 @@
                             <a href="<%= ctx %>/coordinator/progress_overview" class="btn btn-sm btn-light border shadow-sm"><i class="bi bi-list-ol text-primary me-1"></i> Progress Overview</a>
                             <a href="<%= ctx %>/presentation" class="btn btn-sm btn-light border shadow-sm"><i class="bi bi-award text-primary me-1"></i> Presentation</a>
                             <a href="<%= ctx %>/rubrics" class="btn btn-sm btn-light border shadow-sm"><i class="bi bi-check2-square text-primary me-1"></i> Rubrics</a>
+                            <a href="<%= ctx %>/coordinator/settings" class="btn btn-sm btn-light border shadow-sm"><i class="bi bi-gear-fill text-primary me-1"></i> System Settings</a>
                         </div>
 
                         <div class="row g-3 mb-4">
@@ -458,9 +460,12 @@
                     <!-- PRINT HEADER (visible only in print) -->
                     <div class="print-only" style="display:none; margin-bottom:1.5rem; border-bottom:2px solid #0075db; padding-bottom:1rem;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                            <div>
-                                <h2 style="margin:0; color:#0075db;">RailTrack FYP System</h2>
-                                <h3 style="margin:0.25rem 0 0;">Data Analysis Report</h3>
+                            <div style="display:flex; align-items:center; gap: 15px;">
+                                <img src="<%= request.getContextPath()%>/img/railtrack_custom_logo.png" alt="Logo" style="width: 50px; height: 50px; object-fit: contain;" />
+                                <div>
+                                    <h2 style="margin:0; color:#0075db;">RailTrack FYP System</h2>
+                                    <h3 style="margin:0.25rem 0 0;">Data Analysis Report</h3>
+                                </div>
                             </div>
                             <div style="text-align:right; font-size:0.82rem; color:#666;">
                                 <div>Generated: <%= new java.text.SimpleDateFormat("dd MMMM yyyy").format(new java.util.Date()) %></div>
@@ -563,37 +568,119 @@
                         </table>
                     </div>
 
-                    <!-- Section 4: Supervisor Workload -->
+                    <!-- Section 4: Supervisor Workload Prediction -->
                     <div class="report-section mb-5">
-                        <h6 class="report-section-title"><span class="report-num">4</span> Supervisor Workload</h6>
+                        <h6 class="report-section-title"><span class="report-num">4</span> Supervisor Workload Prediction</h6>
+                        <p class="text-muted" style="font-size:0.8rem; margin-top:-5px;">Predicts burnout/capacity based on the risk levels of assigned students.</p>
                         <table class="report-table">
                             <thead>
-                                <tr><th>Supervisor</th><th>Projects Supervised</th><th>% Share</th></tr>
+                                <tr><th>Supervisor</th><th>Total Students</th><th>High Risk</th><th>Medium Risk</th><th>Workload Stress Score</th><th>Prediction</th></tr>
                             </thead>
                             <tbody>
-                                <% for (String sup : _supWorkloads.keySet()) {
-                                       int sc = _supWorkloads.get(sup); %>
+                                <% 
+                                   java.util.List<com.railtrack.system.model.User> c_allStudents = (java.util.List<com.railtrack.system.model.User>) request.getAttribute("allStudents");
+                                   java.util.Map<String, Integer> supScores = new java.util.HashMap<String, Integer>();
+                                   java.util.Map<String, Integer> supHighRisk = new java.util.HashMap<String, Integer>();
+                                   java.util.Map<String, Integer> supMedRisk = new java.util.HashMap<String, Integer>();
+                                   java.util.Map<String, Integer> supTotal = new java.util.HashMap<String, Integer>();
+                                   java.util.List<com.railtrack.system.model.User> highRiskStudents = new java.util.ArrayList<com.railtrack.system.model.User>();
+                                   
+                                   if (c_allStudents != null) {
+                                       for (com.railtrack.system.model.User stu : c_allStudents) {
+                                           double cgpa = stu.getCgpa() != null ? stu.getCgpa() : 0.0;
+                                           int vLogbooks = 0;
+                                           try {
+                                               java.util.List<com.railtrack.system.model.LogbookEntry> lbks = __logDao.findByStudent(stu.getId());
+                                               for (com.railtrack.system.model.LogbookEntry lbk : lbks) {
+                                                   if (lbk.isVerified()) vLogbooks++;
+                                               }
+                                           } catch (Exception e) {}
+                                           
+                                           int riskWeight = 0;
+                                           if (cgpa > 0 && cgpa < 2.5 || vLogbooks < 3) {
+                                               riskWeight = 20; // High Risk
+                                               highRiskStudents.add(stu);
+                                           } else if (cgpa > 0 && cgpa < 3.0 || vLogbooks < 6) {
+                                               riskWeight = 15; // Medium Risk
+                                           } else {
+                                               riskWeight = 10; // Low Risk
+                                           }
+                                           
+                                           String supName = stu.getSupervisorName();
+                                           if (supName != null && !supName.isEmpty()) {
+                                               supTotal.put(supName, supTotal.getOrDefault(supName, 0) + 1);
+                                               supScores.put(supName, supScores.getOrDefault(supName, 0) + riskWeight);
+                                               if (riskWeight == 20) supHighRisk.put(supName, supHighRisk.getOrDefault(supName, 0) + 1);
+                                               if (riskWeight == 15) supMedRisk.put(supName, supMedRisk.getOrDefault(supName, 0) + 1);
+                                           }
+                                       }
+                                   }
+                                   
+                                   for (String sup : supTotal.keySet()) {
+                                       int score = supScores.getOrDefault(sup, 0);
+                                       double displayScore = score / 10.0; // scale down
+                                       int hr = supHighRisk.getOrDefault(sup, 0);
+                                       int mr = supMedRisk.getOrDefault(sup, 0);
+                                       int ts = supTotal.getOrDefault(sup, 0);
+                                       
+                                       String pred = "Manageable";
+                                       String color = "#10b981";
+                                       if (displayScore > 15) {
+                                           pred = "Overloaded (High Burnout Risk)";
+                                           color = "#ef4444";
+                                       } else if (displayScore >= 10) {
+                                           pred = "Nearing Capacity";
+                                           color = "#f59e0b";
+                                       }
+                                %>
                                 <tr>
                                     <td><%= sup %></td>
-                                    <td><%= sc %></td>
-                                    <td><%= totalProjects > 0 ? String.format("%.1f%%", (sc * 100.0 / totalProjects)) : "—" %></td>
+                                    <td><%= ts %></td>
+                                    <td><%= hr %></td>
+                                    <td><%= mr %></td>
+                                    <td style="font-weight:bold; color:<%= color %>;"><%= String.format("%.1f", displayScore) %></td>
+                                    <td style="font-size:0.85rem;"><%= pred %></td>
                                 </tr>
                                 <% } %>
-                                <% if (_supWorkloads.isEmpty()) { %>
-                                <tr><td colspan="3" class="text-center text-muted">No supervisor assignments recorded.</td></tr>
+                                <% if (supTotal.isEmpty()) { %>
+                                <tr><td colspan="6" class="text-center text-muted">No supervisor assignments recorded.</td></tr>
                                 <% } %>
-                                <tr style="font-weight:600; background:#f8fafc;">
-                                    <td>Unassigned Projects</td>
-                                    <td><%= unassignedCount %></td>
-                                    <td><%= totalProjects > 0 ? String.format("%.1f%%", (unassignedCount * 100.0 / totalProjects)) : "—" %></td>
-                                </tr>
                             </tbody>
                         </table>
                     </div>
 
-                    <!-- Section 5: Docker / Deployment Status -->
+                    <!-- Section 5: Global At-Risk Prediction -->
                     <div class="report-section mb-5">
-                        <h6 class="report-section-title"><span class="report-num">5</span> Deployment (Docker) Overview</h6>
+                        <h6 class="report-section-title"><span class="report-num">5</span> Global At-Risk Prediction (High Risk Students)</h6>
+                        <table class="report-table">
+                            <thead>
+                                <tr><th>Student Name</th><th>Supervisor</th><th>CGPA</th><th>Prediction</th></tr>
+                            </thead>
+                            <tbody>
+                                <% 
+                                   if (highRiskStudents.isEmpty()) {
+                                %>
+                                <tr><td colspan="4" class="text-center text-muted">No high-risk students detected.</td></tr>
+                                <% } else {
+                                       for (int i = 0; i < Math.min(5, highRiskStudents.size()); i++) {
+                                           com.railtrack.system.model.User hrs = highRiskStudents.get(i);
+                                %>
+                                <tr>
+                                    <td><%= hrs.getFullName() %></td>
+                                    <td><%= hrs.getSupervisorName() != null ? hrs.getSupervisorName() : "Unassigned" %></td>
+                                    <td><%= hrs.getCgpa() != null ? String.format("%.2f", hrs.getCgpa()) : "N/A" %></td>
+                                    <td style="color:#ef4444; font-size:0.85rem;">Likely to fail/delay. Needs intervention.</td>
+                                </tr>
+                                <%     }
+                                   }
+                                %>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Section 6: Docker / Deployment Status -->
+                    <div class="report-section mb-5">
+                        <h6 class="report-section-title"><span class="report-num">6</span> Deployment (Docker) Overview</h6>
                         <table class="report-table">
                             <thead>
                                 <tr><th>Status</th><th>Count</th><th>% of Total</th></tr>
@@ -607,9 +694,9 @@
                         </table>
                     </div>
 
-                    <!-- Section 6: Full Project Table -->
+                    <!-- Section 7: Full Project Table -->
                     <div class="report-section">
-                        <h6 class="report-section-title"><span class="report-num">6</span> Full Project Listing</h6>
+                        <h6 class="report-section-title"><span class="report-num">7</span> Full Project Listing</h6>
                         <table class="report-table">
                             <thead>
                                 <tr>
@@ -1014,7 +1101,12 @@ new Chart(document.getElementById('deptGradeBar'), {
 </div>
 
 <style>
-@keyframes dockerStackPulse {
+  /* Fix: prevent the report tab from creating a massive invisible void when not active */
+  #report:not(.active) {
+      display: none !important;
+  }
+
+  @keyframes dockerStackPulse {
     0%, 100% { opacity: 1;  transform: translateY(0);    }
     50%       { opacity: .7; transform: translateY(-4px); }
 }
@@ -1150,3 +1242,4 @@ function showDockerLoadingOverlay() {
     .report-section { page-break-inside: avoid; }
 }
 </style>
+

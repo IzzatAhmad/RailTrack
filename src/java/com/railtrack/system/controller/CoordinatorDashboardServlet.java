@@ -98,6 +98,7 @@ public class CoordinatorDashboardServlet extends HttpServlet {
             // Fetch System-wide PITA assignments and Logbook Stats
             List<PitaAssignment> pitaAssignments = userDAO.findAllPitaAssignments();
             req.setAttribute("pitaAssignments", pitaAssignments);
+            req.setAttribute("allStudents", allStudents);
 
             // Logbook Stats handled in JSP now
 

@@ -46,6 +46,11 @@ public class StudentDashboardServlet extends HttpServlet {
             req.setAttribute("pendingCount",   pendingCount);
             req.setAttribute("completedCount", completedCount);
             req.setAttribute("menuItems",      menuItemDAO.findEnabled());
+            
+            com.railtrack.system.dao.UserDAO uDAO = new com.railtrack.system.dao.UserDAO();
+            com.railtrack.system.model.User currentUser = uDAO.findById(studentId);
+            req.setAttribute("currentUser", currentUser);
+            
             req.setAttribute("notif", notificationService.getStudentCounts(studentId));
 
             // -- New Analytics Data --

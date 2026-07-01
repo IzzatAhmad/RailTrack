@@ -1,5 +1,12 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ page import="com.railtrack.system.model.*,java.util.List" %>
+<%!
+    public String formatDuration(long seconds) {
+        long hours = seconds / 3600;
+        long minutes = (seconds % 3600) / 60;
+        return hours + "h " + minutes + "m";
+    }
+%>
 <%
     request.setAttribute("pageTitle", "Manage Project");
     Project         project    = (Project)         request.getAttribute("project");
@@ -12,6 +19,9 @@
     String          success    = request.getParameter("success");
     String          ds         = project.getDockerStatus() != null ? project.getDockerStatus() : "none";
     boolean         running    = project.isRunning();
+    
+    Object durationObj = request.getAttribute("durationToday");
+    long durationToday = (durationObj instanceof Long) ? (Long) durationObj : 0L;
 %>
 <jsp:include page="/views/common/header.jsp"/>
 
@@ -59,10 +69,54 @@
             Student: <strong style="font-size:.875rem;"><%= project.getStudentName() %></strong>
         <% } %>
         <% if (running && project.getPreviewUrl() != null) { %>
-        <a href="http://<%= request.getServerName() %>:<%= project.getContainerPort() %>" target="_blank"
-           class="btn btn-sm btn-outline-success ms-auto">
-            <i class="bi bi-box-arrow-up-right me-1"></i>Open :<%= project.getContainerPort() %>
-        </a>
+        <div class="d-flex flex-column align-items-end ms-auto gap-2">
+            <a href="http://<%= request.getServerName() %>:<%= project.getContainerPort() %>" target="_blank"
+               class="btn btn-sm btn-outline-success w-100">
+                <i class="bi bi-box-arrow-up-right me-1"></i>Open :<%= project.getContainerPort() %>
+            </a>
+            <div class="dropdown w-100">
+                <button class="btn btn-sm btn-light border w-100 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-share me-1"></i>Share
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-3 text-center shadow-sm" style="min-width: 200px;">
+                    <h6 class="dropdown-header px-0 text-dark fw-bold">Scan to open on mobile</h6>
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://<%= request.getServerName() %>:<%= project.getContainerPort() %>" alt="QR Code" class="img-fluid border rounded mb-3" width="150" height="150">
+                    <button class="btn btn-sm btn-primary w-100 mb-2" onclick="navigator.clipboard.writeText('http://<%= request.getServerName() %>:<%= project.getContainerPort() %>'); alert('Link copied to clipboard!');">
+                        <i class="bi bi-link-45deg me-1"></i>Copy Link
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary w-100" onclick="shareQRCode('http://<%= request.getServerName() %>:<%= project.getContainerPort() %>')">
+                        <i class="bi bi-share me-1"></i>Share QR Code
+                    </button>
+                </div>
+            </div>
+        </div>
+        <script>
+        async function shareQRCode(url) {
+            try {
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=\${encodeURIComponent(url)}`;
+                const response = await fetch(qrUrl);
+                const blob = await response.blob();
+                const file = new File([blob], 'qrcode.png', { type: blob.type });
+                
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Project QR Code',
+                        text: 'Scan this QR code to open the project.'
+                    });
+                } else {
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'qrcode.png';
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                }
+            } catch (err) {
+                console.error('Error sharing:', err);
+                alert('Sharing failed. Your browser might not support this feature.');
+            }
+        }
+        </script>
         <% } %>
     </div>
     <div style="font-size:.8rem;color:var(--rt-muted);">
@@ -96,6 +150,17 @@
                 </div>
                 <% } %>
 
+                <!-- Daily Usage -->
+                <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+                    <div style="font-size:.82rem;font-weight:600;color:#a0aec0;">
+                        Daily Usage: 
+                        <strong id="liveDailyUsage" style="color:#e2e8f0;font-weight:700;margin-left:4px;"><%= formatDuration(durationToday) %> / <%= formatDuration(project.getRunningLimitSeconds()) %></strong>
+                    </div>
+                    <% if (durationToday >= project.getRunningLimitSeconds()) { %>
+                        <span class="badge bg-danger text-white" style="font-size:.7rem;">Limit Reached</span>
+                    <% } %>
+                </div>
+
                 <!-- Resource Profile radio -->
                 <div class="mb-3">
                     <div style="font-size:.8rem;font-weight:600;color:#a0aec0;margin-bottom:.5rem;">
@@ -128,7 +193,7 @@
                           data-label="Deploying container..." data-icon="bi-play-circle">
                         <input type="hidden" name="action" value="deploy"/>
                         <input type="hidden" name="resProfile" value="standard" class="res-profile-mirror"/>
-                        <button class="btn btn-success btn-sm" <%= running ? "disabled" : "" %>>
+                        <button class="btn btn-success btn-sm" <%= running ? "disabled" : "" %> <%= durationToday >= project.getRunningLimitSeconds() ? "disabled" : "" %>>
                             <i class="bi bi-play-circle me-1"></i>Deploy
                         </button>
                     </form>
@@ -136,7 +201,7 @@
                           class="docker-action-form" data-action="start"
                           data-label="Starting container..." data-icon="bi-play-fill">
                         <input type="hidden" name="action" value="start"/>
-                        <button class="btn btn-primary btn-sm" <%= (running || "none".equals(ds)) ? "disabled" : "" %>>
+                        <button class="btn btn-primary btn-sm" <%= (running || "none".equals(ds)) ? "disabled" : "" %> <%= durationToday >= project.getRunningLimitSeconds() ? "disabled" : "" %>>
                             <i class="bi bi-play-fill me-1"></i>Start
                         </button>
                     </form>
@@ -153,7 +218,7 @@
                           data-label="Rebuilding &amp; restarting..." data-icon="bi-arrow-repeat">
                         <input type="hidden" name="action" value="rebuild"/>
                         <input type="hidden" name="resProfile" value="standard" class="res-profile-mirror"/>
-                        <button class="btn btn-info btn-sm text-white">
+                        <button class="btn btn-info btn-sm text-white" <%= durationToday >= project.getRunningLimitSeconds() ? "disabled" : "" %>>
                             <i class="bi bi-arrow-repeat me-1"></i>Rebuild
                         </button>
                     </form>
@@ -607,6 +672,29 @@ document.getElementById('rejectModal').addEventListener('show.bs.modal', e => {
     });
 
 })();
+</script>
+
+<!-- Live Daily Usage Updater -->
+<script>
+    (function() {
+        var isRunning = <%= running %>;
+        var durationSecs = <%= durationToday %>;
+        var limitSecs = <%= project.getRunningLimitSeconds() %>;
+        var usageEl = document.getElementById('liveDailyUsage');
+        
+        function formatDuration(secs) {
+            var h = Math.floor(secs / 3600);
+            var m = Math.floor((secs % 3600) / 60);
+            return h + "h " + m + "m";
+        }
+        
+        if (isRunning && durationSecs < limitSecs) {
+            setInterval(function() {
+                durationSecs++;
+                usageEl.textContent = formatDuration(durationSecs) + " / " + formatDuration(limitSecs);
+            }, 1000);
+        }
+    })();
 </script>
 
 <jsp:include page="/views/common/footer.jsp"/>

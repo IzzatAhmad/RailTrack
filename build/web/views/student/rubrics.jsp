@@ -9,9 +9,17 @@
 <jsp:include page="/views/common/header.jsp"/>
 
 <nav style="font-size:.82rem;margin-bottom:1.25rem;">
-    <a href="<%= ctx %>/student/dashboard" style="color:var(--rt-primary);text-decoration:none;">
-        <i class="bi bi-house me-1"></i>Quick Access
+    <%
+        String role = session != null ? (String) session.getAttribute("userRole") : "";
+        String dashboardUrl = "COORDINATOR".equals(role) ? ctx + "/coordinator/dashboard" : ctx + "/student/dashboard";
+    %>
+    <a href="<%= dashboardUrl %>" style="color:var(--rt-primary);text-decoration:none;">
+        <i class="bi bi-house me-1"></i>Dashboard
     </a>
+    <% if ("COORDINATOR".equals(role)) { %>
+    <span class="mx-1" style="color:var(--rt-muted);">/</span>
+    <a href="<%= ctx %>/coordinator/menu" style="color:var(--rt-primary);text-decoration:none;">Student Menu Management</a>
+    <% } %>
     <span class="mx-1" style="color:var(--rt-muted);">/</span>
     <span style="color:var(--rt-muted);">Rubrics</span>
 </nav>

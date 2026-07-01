@@ -16,6 +16,8 @@
         <i class="bi bi-house me-1"></i>Dashboard
     </a>
     <span class="mx-1" style="color:var(--rt-muted);">/</span>
+    <a href="<%= ctx %>/coordinator/menu" style="color:var(--rt-primary);text-decoration:none;">Student Menu Management</a>
+    <span class="mx-1" style="color:var(--rt-muted);">/</span>
     <span style="color:var(--rt-muted);">Student Logbooks</span>
 </nav>
 
@@ -148,3 +150,4 @@
 </script>
 
 <jsp:include page="/views/common/footer.jsp"/>
+

@@ -118,13 +118,12 @@
             <option value="inactive">Inactive</option>
         </select>
 
-        <!-- Bulk action bar — shown only when ≥1 row checked -->
-        <div id="bulkBar" class="d-none ms-auto d-flex align-items-center gap-2">
-            <span id="selCount" class="text-muted" style="font-size:.82rem;">0 selected</span>
-            <button type="button" class="btn btn-sm btn-outline-warning" onclick="bulkDeactivate()">
-                <i class="bi bi-person-slash me-1"></i>Deactivate
-            </button>
-            <button type="button" class="btn btn-sm btn-outline-danger" onclick="bulkDelete()">
+        <!-- Bulk Actions -->
+        <div id="bulkActions" class="d-none animate__animated animate__fadeIn border-start ps-3 align-items-center">
+            <span class="badge bg-secondary me-2" id="selectedCount">0</span>
+            <span class="text-muted" style="font-size:0.8rem; margin-right: 1rem;">selected</span>
+            
+            <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="bulkDelete()">
                 <i class="bi bi-trash me-1"></i>Delete
             </button>
         </div>
@@ -246,13 +245,17 @@
                     <%  } %>
                 </td>
                 <td>
-                    <% if (u.isActive()) { %>
+                    <% if (u.isBanned()) { %>
+                    <span class="text-danger" style="font-size:.82rem;font-weight:500;">
+                        <i class="bi bi-slash-circle-fill me-1" style="font-size:7px;"></i>Banned
+                    </span>
+                    <% } else if (u.isOnline()) { %>
                     <span style="color:var(--rt-success);font-size:.82rem;">
-                        <i class="bi bi-circle-fill me-1" style="font-size:7px;"></i>Active
+                        <i class="bi bi-circle-fill me-1" style="font-size:7px;"></i>Online
                     </span>
                     <% } else { %>
                     <span style="color:var(--rt-muted);font-size:.82rem;">
-                        <i class="bi bi-circle me-1" style="font-size:7px;"></i>Inactive
+                        <i class="bi bi-circle me-1" style="font-size:7px;"></i>Offline
                     </span>
                     <% } %>
                 </td>
@@ -261,17 +264,22 @@
                 </td>
                 <td class="text-end pe-3">
                     <div class="d-flex gap-1 justify-content-end">
-                        <% if (u.isActive()) { %>
+                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                title="Change Role"
+                                onclick="openChangeRoleModal(<%= u.getId() %>, '<%= u.getRole() %>')">
+                            <i class="bi bi-person-badge"></i>
+                        </button>
+
                         <form method="post" action="<%= ctx %>/coordinator/users" class="d-inline">
-                            <input type="hidden" name="action" value="deactivate"/>
+                            <input type="hidden" name="action" value="<%= u.isBanned() ? "unban" : "ban" %>"/>
                             <input type="hidden" name="id" value="<%= u.getId() %>"/>
-                            <button type="submit" class="btn btn-sm btn-outline-warning"
-                                    title="Deactivate"
-                                    onclick="return confirm('Deactivate <%= u.getUsername() %>?')">
-                                <i class="bi bi-person-slash"></i>
+                            <button type="submit" class="btn btn-sm <%= u.isBanned() ? "btn-dark" : "btn-outline-dark" %>"
+                                    title="<%= u.isBanned() ? "Unban User" : "Ban User" %>"
+                                    onclick="return confirm('<%= u.isBanned() ? "Unban" : "Ban" %> <%= u.getUsername() %>?')">
+                                <i class="bi <%= u.isBanned() ? "bi-check-circle" : "bi-slash-circle" %>"></i>
                             </button>
                         </form>
-                        <% } %>
+
                         <form method="post" action="<%= ctx %>/coordinator/users" class="d-inline">
                             <input type="hidden" name="action" value="delete"/>
                             <input type="hidden" name="id" value="<%= u.getId() %>"/>
@@ -496,6 +504,11 @@
                             <input type="number" step="0.01" min="0.00" max="4.00" name="cgpa" class="form-control form-control-sm"
                                    placeholder="e.g. 3.50"/>
                         </div>
+                        <div class="col-6" id="manualSemesterField">
+                            <label class="form-label fw-semibold" style="font-size:.83rem;">Semester (Optional)</label>
+                            <input type="text" name="semester" class="form-control form-control-sm"
+                                   placeholder="e.g. 2025/2026-2" pattern="\d{4}/\d{4}-[12]"/>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
@@ -527,7 +540,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content" style="border-radius:12px; backdrop-filter: blur(8px); background: rgba(255, 255, 255, 0.95);">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold"><i class="bi bi-file-earmark-arrow-up text-primary me-2"></i>Import Users via JSON</h5>
+                <h5 class="modal-title fw-bold"><i class="bi bi-file-earmark-arrow-up text-primary me-2"></i>Import Users via JSON / Spreadsheet</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -535,20 +548,25 @@
                 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2 bg-light p-3 rounded" style="border: 1px solid rgba(0,0,0,0.05);">
                     <div>
                         <p class="mb-0 fw-semibold" style="font-size:.85rem;">Need the correct format?</p>
-                        <p class="text-muted mb-0" style="font-size:.78rem;">Download our starter JSON file template containing sample configurations.</p>
+                        <p class="text-muted mb-0" style="font-size:.78rem;">Download our starter template containing sample configurations.</p>
                     </div>
-                    <a href="<%= ctx %>/templates/users_template.json" download="users_template.json" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-download me-1"></i>Download JSON Template
-                    </a>
+                    <div>
+                        <a href="<%= ctx %>/templates/users_template.json" download="users_template.json" class="btn btn-outline-primary btn-sm me-2">
+                            <i class="bi bi-download me-1"></i>JSON Template
+                        </a>
+                        <a href="<%= ctx %>/templates/users_template.csv" download="users_template.csv" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-download me-1"></i>CSV Template
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Drag & Drop Zone -->
                 <div id="dropZone" class="text-center p-4 border border-2 border-dashed rounded-3 mb-3 cursor-pointer" 
                      style="border-color: rgba(var(--bs-primary-rgb), 0.4) !important; background: rgba(var(--bs-primary-rgb), 0.02); transition: all 0.2s ease;">
                     <i class="bi bi-cloud-upload text-primary" style="font-size: 2.2rem;"></i>
-                    <h6 class="mt-2 fw-semibold mb-1" style="font-size:.9rem;">Drag and drop your JSON file here</h6>
-                    <p class="text-muted mb-3" style="font-size:.8rem;">or click to browse local files</p>
-                    <input type="file" id="importFileInput" accept=".json" style="display:none;"/>
+                    <h6 class="mt-2 fw-semibold mb-1" style="font-size:.9rem;">Drag and drop your JSON or Spreadsheet file here</h6>
+                    <p class="text-muted mb-3" style="font-size:.8rem;">or click to browse local files (.json, .csv, .xlsx)</p>
+                    <input type="file" id="importFileInput" accept=".json,.csv,.xlsx,.xls" style="display:none;"/>
                     <button type="button" class="btn btn-primary btn-sm px-3" onclick="document.getElementById('importFileInput').click()">Browse Files</button>
                 </div>
 
@@ -574,6 +592,7 @@
                                     <th>Role</th>
                                     <th>Dept</th>
                                     <th>CGPA</th>
+                                    <th>Semester</th>
                                     <th>Validation Status</th>
                                 </tr>
                             </thead>
@@ -601,6 +620,38 @@
     </div>
 </div>
 
+<!-- Change Role Modal -->
+<div class="modal fade" id="changeRoleModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <form method="post" action="<%= ctx %>/coordinator/users">
+                <input type="hidden" name="action" value="changeRole"/>
+                <input type="hidden" name="id" id="crUserId"/>
+                
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fs-6 fw-bold">Change Role</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size:.83rem;">Select New Role</label>
+                        <select class="form-select" name="newRole" id="crNewRole" required>
+                            <option value="STUDENT">Student</option>
+                            <option value="SUPERVISOR">Supervisor</option>
+                            <option value="COORDINATOR">Coordinator</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>
 (function () {
     var searchInput  = document.getElementById('searchInput');
@@ -703,22 +754,6 @@
     if (filterRole)   filterRole.addEventListener('change',  applyFilters);
     if (filterStatus) filterStatus.addEventListener('change', applyFilters);
 
-    window.bulkDeactivate = function () {
-        var checked = getChecked();
-        if (checked.length === 0) return;
-        if (!confirm('Deactivate ' + checked.length + ' selected user(s)?')) return;
-        var container = document.getElementById('bulkDeactivateIds');
-        container.innerHTML = '';
-        checked.forEach(function (cb) {
-            var inp = document.createElement('input');
-            inp.type  = 'hidden';
-            inp.name  = 'ids';
-            inp.value = cb.value;
-            container.appendChild(inp);
-        });
-        document.getElementById('bulkDeactivateForm').submit();
-    };
-
     window.bulkDelete = function () {
         var checked = getChecked();
         if (checked.length === 0) return;
@@ -733,6 +768,13 @@
             container.appendChild(inp);
         });
         document.getElementById('bulkDeleteForm').submit();
+    };
+
+    window.openChangeRoleModal = function(id, currentRole) {
+        document.getElementById('crUserId').value = id;
+        document.getElementById('crNewRole').value = currentRole.toUpperCase();
+        var myModal = new bootstrap.Modal(document.getElementById('changeRoleModal'));
+        myModal.show();
     };
 
     // ── Bulk JSON Import Logic ────────────────────────────────────────────────
@@ -771,21 +813,41 @@
 
     function handleFile(file) {
         if (!file) return;
+        var ext = file.name.split('.').pop().toLowerCase();
         var reader = new FileReader();
-        reader.onload = function (e) {
-            var content = e.target.result;
-            try {
-                var data = JSON.parse(content);
-                if (!Array.isArray(data)) {
-                    showFileError("JSON must be a list of user objects (i.e. enclosed in square brackets [ ]).");
-                    return;
+        
+        if (ext === 'json') {
+            reader.onload = function (e) {
+                var content = e.target.result;
+                try {
+                    var data = JSON.parse(content);
+                    if (!Array.isArray(data)) {
+                        showFileError("JSON must be a list of user objects (i.e. enclosed in square brackets [ ]).");
+                        return;
+                    }
+                    processParsedData(data);
+                } catch (err) {
+                    showFileError("Failed to parse JSON file. Please ensure it is valid JSON.");
                 }
-                processParsedData(data);
-            } catch (err) {
-                showFileError("Failed to parse JSON file. Please ensure it is valid JSON.");
-            }
-        };
-        reader.readAsText(file);
+            };
+            reader.readAsText(file);
+        } else if (ext === 'csv' || ext === 'xlsx' || ext === 'xls') {
+            reader.onload = function(e) {
+                try {
+                    var data = new Uint8Array(e.target.result);
+                    var workbook = XLSX.read(data, {type: 'array'});
+                    var firstSheetName = workbook.SheetNames[0];
+                    var worksheet = workbook.Sheets[firstSheetName];
+                    var json = XLSX.utils.sheet_to_json(worksheet, {defval: ""});
+                    processParsedData(json);
+                } catch (err) {
+                    showFileError("Failed to parse spreadsheet file.");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        } else {
+            showFileError("Unsupported file type. Please upload a JSON, CSV, or Excel file.");
+        }
     }
 
     function showFileError(msg) {
@@ -800,8 +862,15 @@
         var emails = [];
 
         data.forEach(function (item) {
-            var username = (item.username || '').toString().trim();
             var email = (item.email || '').toString().trim();
+            var username = (item.username || '').toString().trim();
+            
+            // Automatically pull username from email before '@' if not provided
+            if (!username && email.includes('@')) {
+                username = email.split('@')[0];
+                item.username = username;
+            }
+            
             if (username) usernames.push(username);
             if (email) emails.push(email);
         });
@@ -837,6 +906,7 @@
     function renderPreview(data, conflicts) {
         var tbody = document.getElementById('importPreviewBody');
         tbody.innerHTML = '';
+        parsedUsers = [];
         
         var hasError = false;
         var usernameRegex = /^[A-Za-z0-9_]{3,30}$/;
@@ -859,6 +929,7 @@
             var role = (item.role || '').toString().trim().toUpperCase();
             var active = item.active !== undefined ? (item.active === true || item.active === 1 || item.active === '1' || item.active === 'true' || item.active === 'ACTIVE') : true;
             var cgpa = item.cgpa !== undefined ? (item.cgpa || '').toString().trim() : '';
+            var semester = (item.semester || '').toString().trim();
 
             var errors = [];
             
@@ -916,6 +987,12 @@
                 }
             }
 
+            if (role === 'STUDENT' && semester) {
+                if (!/^\d{4}\/\d{4}-[12]$/.test(semester)) {
+                    errors.push("Semester must be in format YYYY/YYYY-1 or YYYY/YYYY-2");
+                }
+            }
+
             var isValid = errors.length === 0;
             if (!isValid) {
                 hasError = true;
@@ -932,6 +1009,7 @@
                 role: role,
                 active: active,
                 cgpa: role === 'STUDENT' ? cgpa : '',
+                semester: role === 'STUDENT' ? semester : '',
                 isValid: isValid
             });
 
@@ -944,6 +1022,7 @@
                 '<td><span class="badge ' + (role === 'COORDINATOR' ? 'bg-warning text-dark' : role === 'SUPERVISOR' ? 'bg-success' : 'bg-primary') + '">' + escapeHtml(role || '—') + '</span></td>' +
                 '<td class="text-muted">' + escapeHtml(department || '—') + '</td>' +
                 '<td>' + escapeHtml(role === 'STUDENT' && cgpa ? cgpa : '—') + '</td>' +
+                '<td>' + escapeHtml(role === 'STUDENT' && semester ? semester : '—') + '</td>' +
                 '<td>' + (isValid 
                     ? '<span class="text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>Ready</span>'
                     : '<span class="text-danger fw-semibold" title="' + escapeHtml(errors.join(', ')) + '"><i class="bi bi-x-circle-fill me-1"></i>' + escapeHtml(errors.join('; ')) + '</span>'
@@ -997,6 +1076,7 @@
             appendHidden(container, 'users[' + idx + '].role', user.role);
             appendHidden(container, 'users[' + idx + '].active', user.active ? 'true' : 'false');
             appendHidden(container, 'users[' + idx + '].cgpa', user.cgpa || '');
+            appendHidden(container, 'users[' + idx + '].semester', user.semester || '');
         });
         
         document.getElementById('importUsersForm').submit();
@@ -1010,21 +1090,42 @@
         parent.appendChild(inp);
     }
 
-    // Toggle manual CGPA field visibility in manual user creation form based on selected role
+    // Toggle manual CGPA and semester field visibility in manual user creation form
     var roleSelect = document.getElementById('manualRoleSelect');
     var cgpaField = document.getElementById('manualCgpaField');
-    if (roleSelect && cgpaField) {
-        function toggleManualCgpa() {
-            if (roleSelect.value === 'STUDENT') {
-                cgpaField.style.display = 'block';
-            } else {
-                cgpaField.style.display = 'none';
-                var inp = cgpaField.querySelector('input');
-                if (inp) inp.value = '';
+    var semesterField = document.getElementById('manualSemesterField');
+    if (roleSelect && cgpaField && semesterField) {
+        function toggleManualFields() {
+            var isStudent = roleSelect.value === 'STUDENT';
+            cgpaField.style.display = isStudent ? 'block' : 'none';
+            semesterField.style.display = isStudent ? 'block' : 'none';
+            if (!isStudent) {
+                var cInp = cgpaField.querySelector('input');
+                var sInp = semesterField.querySelector('input');
+                if (cInp) cInp.value = '';
+                if (sInp) sInp.value = '';
             }
         }
-        roleSelect.addEventListener('change', toggleManualCgpa);
-        toggleManualCgpa(); // run once initially
+        roleSelect.addEventListener('change', toggleManualFields);
+        toggleManualFields(); // run once initially
+    }
+
+    // Reset Import Modal on Close
+    var importModalEl = document.getElementById('importUsersModal');
+    if (importModalEl) {
+        importModalEl.addEventListener('hidden.bs.modal', function () {
+            parsedUsers = [];
+            var fileInput = document.getElementById('importFileInput');
+            if (fileInput) fileInput.value = '';
+            var tbody = document.getElementById('importPreviewBody');
+            if (tbody) tbody.innerHTML = '';
+            var previewContainer = document.getElementById('importPreviewContainer');
+            if (previewContainer) previewContainer.classList.add('d-none');
+            var confirmBtn = document.getElementById('btnConfirmImport');
+            if (confirmBtn) confirmBtn.disabled = true;
+            var errBanner = document.getElementById('importErrorAlert');
+            if (errBanner) errBanner.classList.add('d-none');
+        });
     }
 
     applyFilters();
@@ -1032,3 +1133,4 @@
 </script>
 
 <jsp:include page="/views/common/footer.jsp"/>
+

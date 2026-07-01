@@ -470,10 +470,13 @@
     <!-- Print-only header -->
     <div class="print-only" style="display:none; margin-bottom:1.5rem; border-bottom:2px solid #0075db; padding-bottom:1rem;">
         <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div>
-                <h2 style="margin:0; color:#0075db;">RailTrack FYP System</h2>
-                <h3 style="margin:0.25rem 0 0;">Supervisor Data Analysis Report</h3>
-                <p style="margin:0.25rem 0 0; font-size:0.85rem; color:#555;">Supervisor: <%= session.getAttribute("userName") %></p>
+            <div style="display:flex; align-items:center; gap: 15px;">
+                <img src="<%= request.getContextPath()%>/img/railtrack_custom_logo.png" alt="Logo" style="width: 50px; height: 50px; object-fit: contain;" />
+                <div>
+                    <h2 style="margin:0; color:#0075db;">RailTrack FYP System</h2>
+                    <h3 style="margin:0.25rem 0 0;">Supervisor Data Analysis Report</h3>
+                    <p style="margin:0.25rem 0 0; font-size:0.85rem; color:#555;">Supervisor: <%= session.getAttribute("userName") %></p>
+                </div>
             </div>
             <div style="text-align:right; font-size:0.82rem; color:#666;">
                 <div>Generated: <%= new java.text.SimpleDateFormat("dd MMMM yyyy").format(new java.util.Date()) %></div>
@@ -582,9 +585,66 @@
         </table>
     </div>
 
-    <!-- Section 5: Full Student / Project Listing -->
+    <!-- Section 5: Student Risk Prediction -->
+    <div class="report-section mb-5">
+        <h6 class="report-section-title"><span class="report-num">5</span> Student Risk & Performance Predictions</h6>
+        <p class="text-muted" style="font-size:0.8rem; margin-top:-5px;">Predicted based on current CGPA, Milestone delays, and Logbook consistency.</p>
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>CGPA</th>
+                    <th>Verified Logbooks</th>
+                    <th>Risk Level</th>
+                    <th>Predicted Outcome</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% 
+                   List<com.railtrack.system.model.User> stdList = (List<com.railtrack.system.model.User>) request.getAttribute("students");
+                   com.railtrack.system.dao.LogbookDAO lDao = new com.railtrack.system.dao.LogbookDAO();
+                   if (stdList != null) {
+                       for (com.railtrack.system.model.User stu : stdList) {
+                           double cgpa = stu.getCgpa() != null ? stu.getCgpa() : 0.0;
+                           int vLogbooks = 0;
+                           try {
+                               List<com.railtrack.system.model.LogbookEntry> lbks = lDao.findByStudent(stu.getId());
+                               for (com.railtrack.system.model.LogbookEntry lbk : lbks) {
+                                   if (lbk.isVerified()) vLogbooks++;
+                               }
+                           } catch (Exception e) {}
+                           
+                           String riskLevel = "Low";
+                           String riskColor = "#10b981"; // Green
+                           String outcome = "On track for completion";
+                           
+                           if (cgpa > 0 && cgpa < 2.5 || vLogbooks < 3) {
+                               riskLevel = "High";
+                               riskColor = "#ef4444"; // Red
+                               outcome = "Likely to fail/delay. Needs intervention.";
+                           } else if (cgpa > 0 && cgpa < 3.0 || vLogbooks < 6) {
+                               riskLevel = "Medium";
+                               riskColor = "#f59e0b"; // Yellow
+                               outcome = "Requires monitoring.";
+                           }
+                %>
+                <tr>
+                    <td><%= stu.getFullName() %></td>
+                    <td><%= cgpa > 0 ? String.format("%.2f", cgpa) : "N/A" %></td>
+                    <td><%= vLogbooks %></td>
+                    <td style="font-weight:600; color:<%= riskColor %>;"><%= riskLevel %></td>
+                    <td style="font-size:0.85rem;"><%= outcome %></td>
+                </tr>
+                <%     }
+                   }
+                %>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Section 6: Full Student / Project Listing -->
     <div class="report-section">
-        <h6 class="report-section-title"><span class="report-num">5</span> Full Student &amp; Project Listing</h6>
+        <h6 class="report-section-title"><span class="report-num">6</span> Full Student &amp; Project Listing</h6>
         <table class="report-table">
             <thead>
                 <tr>
@@ -942,3 +1002,4 @@
     .report-section { page-break-inside: avoid; }
 }
 </style>
+

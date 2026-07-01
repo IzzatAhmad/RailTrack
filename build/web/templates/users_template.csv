@@ -1,0 +1,3 @@
+password,fullName,email,department,role,cgpa,semester
+Password123!,Charlie New Student,charlie_new@railtrack.local,Computer Science,STUDENT,3.85,2025/2026-1
+Password123!,Ali New Supervisor,ali_new@railtrack.local,Software Engineering,SUPERVISOR,,

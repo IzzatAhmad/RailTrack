@@ -348,8 +348,8 @@
                     %% Minimalist Art Style
                     classDef done fill:#f0fdf4,stroke:#22c55e,stroke-width:1px,color:#166534;
                     classDef active fill:#eff6ff,stroke:#3b82f6,stroke-width:1.5px,color:#1e40af;
-                    classDef locked fill:#ffffff,stroke:#cbd5e1,stroke-width:1px,color:#94a3b8,stroke-dasharray: 4 4;
-                    classDef fail fill:#fef2f2,stroke:#ef4444,stroke-width:1px,color:#991b1b,stroke-dasharray: 4 4;
+                    classDef locked fill:#ffffff,stroke:#cbd5e1,stroke-width:1px,color:#94a3b8,stroke-dasharray:5,5;
+                    classDef fail fill:#fef2f2,stroke:#ef4444,stroke-width:1px,color:#991b1b,stroke-dasharray:5,5;
 
                     class START <%= cMULA %>;
                     class MF <%= cMF %>;
@@ -380,13 +380,23 @@
 </div>
 
 <!-- Add Mermaid JS -->
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
-<script>
+<script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs';
+    
     mermaid.initialize({ 
-        startOnLoad: true, 
+        startOnLoad: false, 
         theme: 'base', 
-        themeVariables: { fontFamily: 'inherit' } 
+        securityLevel: 'loose',
+        themeVariables: { fontFamily: 'Inter, sans-serif' } 
     });
+
+    try {
+        await mermaid.run({
+            querySelector: '.mermaid'
+        });
+    } catch (e) {
+        console.error('Mermaid render error:', e);
+    }
 </script>
 
 <!-- Page header -->
@@ -514,7 +524,8 @@
                         <div class="col-6">
                             <label class="form-label fw-semibold" style="font-size:.83rem;">Semester</label>
                             <input type="text" readonly name="semester" id="projSemester" class="form-control bg-light"
-                                   placeholder="2024/2025-1">
+                                   value="${not empty currentUser.semester ? currentUser.semester : ''}"
+                                   placeholder="e.g. 2025/2026-2">
                         </div>
                     </div>
                 </div>

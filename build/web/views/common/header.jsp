@@ -396,58 +396,124 @@
 
                         <div class="rt-nav-spacer"></div>
 
-                        <% if (role==null) { %>
-                            <!-- Guest links -->
-                            <a href="#problem" class="d-none d-md-inline text-decoration-none"
-                                style="font-size:.875rem;color:var(--rt-muted);">Problem</a>
-                            <a href="#solution" class="d-none d-md-inline text-decoration-none"
-                                style="font-size:.875rem;color:var(--rt-muted);">Solution</a>
-                            <a href="#workflow" class="d-none d-md-inline text-decoration-none"
-                                style="font-size:.875rem;color:var(--rt-muted);">Workflow</a>
-                            <a href="javascript:void(0)" onclick="openLogin()" class="btn btn-primary btn-sm ms-2">Sign
-                                in</a>
+                        <div class="d-none d-md-flex align-items-center gap-2">
+                            <% if (role==null) { %>
+                                <!-- Guest links -->
+                                <a href="#problem" class="text-decoration-none"
+                                    style="font-size:.875rem;color:var(--rt-muted);">Problem</a>
+                                <a href="#solution" class="text-decoration-none"
+                                    style="font-size:.875rem;color:var(--rt-muted);">Solution</a>
+                                <a href="#workflow" class="text-decoration-none"
+                                    style="font-size:.875rem;color:var(--rt-muted);">Workflow</a>
+                                <a href="javascript:void(0)" onclick="openLogin()"
+                                    class="btn btn-primary btn-sm ms-2">Sign
+                                    in</a>
 
-                            <% } else { %>
+                                <% } else { %>
 
-                                <% if ("COORDINATOR".equals(role)) { %>
-                                    <div class="rt-nav-links d-none d-md-flex">
-                                    </div>
-                                    <% } %>
+                                    <% if ("COORDINATOR".equals(role)) { %>
+                                        <div class="rt-nav-links d-none d-md-flex">
+                                        </div>
+                                        <% } %>
 
-                                        <!-- Notification bell -->
-                                        <% if (notifTotal> 0) {%>
-                                            <button class="rt-notif-btn" title="<%= notifTotal%> notification(s)">
-                                                <span class="rt-notif-dot"></span>
-                                                <img src="<%= request.getContextPath()%>/img/alarm.gif" alt="RailTrack"
-                                                    style="width:32px;height:32px;object-fit:cover;border-radius:50%;">
-                                            </button>
-                                            <% }%>
-
-                                                <!-- Role badge -->
-                                                <span class="rt-role-badge <%= role%>">
-                                                    <%= role%>
-                                                </span>
-
-                                                <!-- User avatar + name -->
-                                                <a href="<%= profileUrl%>" class="rt-user-menu text-decoration-none">
-                                                    <div class="rt-user-avatar">
-                                                        <%= userName !=null && !userName.isEmpty() ?
-                                                            String.valueOf(userName.charAt(0)).toUpperCase() : "?" %>
-                                                    </div>
-                                                    <span class="d-none d-sm-inline text-dark fw-medium"
-                                                        style="font-size:.875rem;">
-                                                        <%= userName%>
-                                                    </span>
-                                                </a>
-                                                <div class="vr h-75 my-auto d-none d-md-block"></div>
-                                                <!-- Logout -->
-                                                <a href="<%= ctx%>/logout" class="rt-logout-btn">
-                                                    <i class="bi bi-box-arrow-right me-1"></i>
-                                                    <span class="d-none d-sm-inline">Logout</span>
-                                                </a>
-
+                                            <!-- Notification bell -->
+                                            <% if (notifTotal> 0) {%>
+                                                <button class="rt-notif-btn" title="<%= notifTotal%> notification(s)">
+                                                    <span class="rt-notif-dot"></span>
+                                                    <img src="<%= request.getContextPath()%>/img/alarm.gif"
+                                                        alt="RailTrack"
+                                                        style="width:32px;height:32px;object-fit:cover;border-radius:50%;">
+                                                </button>
                                                 <% }%>
+
+                                                    <!-- Role badge -->
+                                                    <span class="rt-role-badge <%= role%>">
+                                                        <%= role%>
+                                                    </span>
+
+                                                    <!-- User avatar + name -->
+                                                    <a href="<%= profileUrl%>"
+                                                        class="rt-user-menu text-decoration-none">
+                                                        <div class="rt-user-avatar">
+                                                            <%= userName !=null && !userName.isEmpty() ?
+                                                                String.valueOf(userName.charAt(0)).toUpperCase() : "?"
+                                                                %>
+                                                        </div>
+                                                        <span class="text-dark fw-medium" style="font-size:.875rem;">
+                                                            <%= userName%>
+                                                        </span>
+                                                    </a>
+                                                    <div class="vr h-75 my-auto"></div>
+                                                    <!-- Logout -->
+                                                    <a href="<%= ctx%>/logout" class="rt-logout-btn">
+                                                        <i class="bi bi-box-arrow-right me-1"></i>
+                                                        <span>Logout</span>
+                                                    </a>
+
+                                                    <% }%>
+                        </div>
+
+                        <!-- Mobile Toggle Button -->
+                        <button class="btn btn-sm d-md-none border-0 ms-2" type="button" data-bs-toggle="offcanvas"
+                            data-bs-target="#mobileOffcanvasNav" aria-controls="mobileOffcanvasNav">
+                            <i class="bi bi-list fs-3 text-dark"></i>
+                        </button>
                     </nav>
+
+                    <!-- Offcanvas Mobile Menu -->
+                    <div class="offcanvas offcanvas-end" tabindex="-1" id="mobileOffcanvasNav"
+                        aria-labelledby="mobileOffcanvasNavLabel">
+                        <div class="offcanvas-header border-bottom">
+                            <h5 class="offcanvas-title fw-bold" id="mobileOffcanvasNavLabel">Menu</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
+                                aria-label="Close"></button>
+                        </div>
+                        <div class="offcanvas-body">
+                            <% if (role==null) { %>
+                                <div class="d-flex flex-column gap-3">
+                                    <a href="#problem" class="text-decoration-none text-dark fw-medium">Problem</a>
+                                    <a href="#solution" class="text-decoration-none text-dark fw-medium">Solution</a>
+                                    <a href="#workflow" class="text-decoration-none text-dark fw-medium">Workflow</a>
+                                    <button onclick="openLogin()" class="btn btn-primary w-100 mt-2"
+                                        data-bs-dismiss="offcanvas">Sign in</button>
+                                </div>
+                                <% } else { %>
+                                    <div class="d-flex flex-column gap-3">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <div class="rt-user-avatar"
+                                                style="width: 40px; height: 40px; border-radius: 50%; background: var(--rt-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 600;">
+                                                <%= userName !=null && !userName.isEmpty() ?
+                                                    String.valueOf(userName.charAt(0)).toUpperCase() : "?" %>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark">
+                                                    <%= userName%>
+                                                </div>
+                                                <div class="rt-role-badge <%= role%> mt-1"
+                                                    style="display:inline-block;">
+                                                    <%= role%>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <hr class="my-1">
+
+                                        <a href="<%= profileUrl%>"
+                                            class="text-decoration-none text-dark fw-medium p-2 rounded"
+                                            style="transition: background .15s;"
+                                            onmouseover="this.style.background='var(--rt-bg)'"
+                                            onmouseout="this.style.background='transparent'">
+                                            <i class="bi bi-person me-2"></i> Profile
+                                        </a>
+
+                                        <a href="<%= ctx%>/logout"
+                                            class="text-decoration-none text-danger fw-medium mt-auto pt-3 border-top">
+                                            <i class="bi bi-box-arrow-right me-2"></i> Logout
+                                        </a>
+                                    </div>
+                                    <% }%>
+                        </div>
+                    </div>
 
 
                     <!-- ── Page content ───────────────────────────────────────────── -->

@@ -75,10 +75,44 @@ public class Milestone {
         return LocalDate.now().isAfter(dueDate);
     }
  
-    /** Returns the weighted score contribution, or 0 if not yet graded. */
+    /**
+     * Returns the raw weighted score contribution of this milestone toward the overall grade.
+     *
+     * <p><strong>Note:</strong> This value is a raw contribution ({@code grade × weight / 100})
+     * and is <em>not</em> the normalized grade. To compute the true overall grade across all
+     * approved milestones, use {@link #computeNormalizedGrade(java.util.List)} or
+     * {@code MilestoneDAO.calculateOverallGrade(projectId)}, both of which divide by the
+     * total weight to handle cases where weights don't sum to 100%.
+     *
+     * @return weighted contribution (0.0 if not yet graded)
+     */
     public double getWeightedScore() {
         if (grade == null) return 0.0;
         return (grade / 100.0) * weight;
+    }
+
+    /**
+     * Computes the normalized overall grade from a list of milestones using weight normalization.
+     *
+     * <p>Formula: {@code SUM(grade × weight) / SUM(weight)}, applied only to APPROVED
+     * milestones that have a grade. This mirrors the SQL computed by
+     * {@code MilestoneDAO.calculateOverallGrade()} and ensures the result is correctly
+     * scaled to 0–100 even if coordinator-configured weights don't sum to exactly 100%.
+     *
+     * @param milestones list of milestones to aggregate (may be the full project list)
+     * @return normalized overall grade in the range 0–100, or 0.0 if none are graded
+     */
+    public static double computeNormalizedGrade(java.util.List<Milestone> milestones) {
+        double weightedSum = 0.0;
+        double totalWeight = 0.0;
+        for (Milestone m : milestones) {
+            if (m.getStatus() == MilestoneStatus.APPROVED && m.getGrade() != null) {
+                weightedSum += m.getGrade() * m.getWeight();
+                totalWeight += m.getWeight();
+            }
+        }
+        if (totalWeight == 0.0) return 0.0;
+        return (weightedSum / 100.0) / totalWeight * 100.0;
     }
  
     public boolean isPendingReview() {

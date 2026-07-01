@@ -12,6 +12,17 @@
     DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy");
     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
     DateTimeFormatter timestampFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    String semesterStart = (String) request.getAttribute("semester_start_date");
+    String semesterEnd = (String) request.getAttribute("semester_end_date");
+    if (semesterStart == null) semesterStart = "";
+    if (semesterEnd == null) semesterEnd = "";
+
+    String todayStr = LocalDate.now().toString();
+    String maxDateStr = todayStr;
+    if (!semesterEnd.isEmpty() && todayStr.compareTo(semesterEnd) > 0) {
+        maxDateStr = semesterEnd; // if today is past semester end, max is semester end
+    }
 %>
 <jsp:include page="/views/common/header.jsp"/>
 
@@ -86,7 +97,7 @@
         <p class="small text-muted mb-0">Record your regular project meetings and activities here.</p>
     </div>
     <% } else { %>
-    <div class="position-relative ps-4" style="border-left: 2px solid var(--rt-border); margin-left: 10px;">
+    <div class="position-relative ps-4" style="border-left: 2px solid var(--rt-border); margin-left: 45px;">
         <% 
             LocalDate lastDate = null;
             for (LogbookEntry entry : entries) {
@@ -155,14 +166,14 @@
                 <% if (entry.getImages() != null && !entry.getImages().isEmpty()) { %>
                 <div class="row g-2 mt-3 mb-2">
                     <% for (LogbookImage img : entry.getImages()) { %>
-                    <div class="col-6 col-sm-4 col-md-3">
-                        <a href="<%= ctx %>/file/image/<%= img.getId() %>" target="_blank" title="<%= img.getFileName() %>">
-                            <img src="<%= ctx %>/file/image/<%= img.getId() %>"
-                                 class="img-fluid rounded border shadow-sm"
-                                 style="max-height: 120px; object-fit: cover; width: 100%; cursor: pointer;"
-                                 alt="<%= img.getFileName() %>" />
-                        </a>
-                    </div>
+                      <div class="col-6 col-sm-4 col-md-3">
+                          <a href="javascript:void(0);" onclick="showImagePopup('<%= ctx %>/file/image/<%= img.getId() %>')" title="<%= img.getFileName() %>">
+                              <img src="<%= ctx %>/file/image/<%= img.getId() %>"
+                                   class="img-fluid rounded border shadow-sm"
+                                   style="max-height: 120px; object-fit: cover; width: 100%; cursor: pointer;"
+                                   alt="<%= img.getFileName() %>" />
+                          </a>
+                      </div>
                     <% } %>
                 </div>
                 <% } %>
@@ -195,14 +206,20 @@
                     <div id="futureAlertMsg" class="alert alert-danger p-2 mb-3 small d-none">
                         <i class="bi bi-exclamation-triangle-fill me-1"></i> Date and time of activity cannot be in the future.
                     </div>
+                    <% if (!semesterStart.isEmpty() || !semesterEnd.isEmpty()) { %>
+                    <div id="semesterAlertMsg" class="alert alert-danger p-2 mb-3 small d-none">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Date of activity must fall within the current semester bounds.
+                    </div>
+                    <% } %>
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
                             <label class="form-label fw-bold text-dark" style="font-size: .85rem;">
                                 <i class="bi bi-calendar-event me-1 text-muted"></i> Date of Activity
                             </label>
                             <input type="date" name="activityDate" id="activityDateInput" class="form-control" required 
-                                   value="<%= LocalDate.now().toString() %>" 
-                                   max="<%= LocalDate.now().toString() %>" />
+                                   value="<%= todayStr %>" 
+                                   <% if (!semesterStart.isEmpty()) { %> min="<%= semesterStart %>" <% } %>
+                                   max="<%= maxDateStr %>" />
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold text-dark" style="font-size: .85rem;">
@@ -285,12 +302,50 @@
 </div>
 <% } %>
 
+<!-- Minimalist Image Popup Modal -->
+<div class="modal fade" id="imagePopupModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl" style="max-width: 90vw;">
+    <div class="modal-content bg-transparent border-0 shadow-none">
+      <div class="modal-body text-center p-0 position-relative">
+        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close" style="z-index: 1055; filter: drop-shadow(0px 0px 4px rgba(0,0,0,0.8));"></button>
+        <img id="popupImage" src="" class="img-fluid rounded" style="max-height: 90vh; cursor: zoom-out; object-fit: contain;" data-bs-dismiss="modal" />
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+function showImagePopup(src) {
+    document.getElementById('popupImage').src = src;
+    var modal = new bootstrap.Modal(document.getElementById('imagePopupModal'));
+    modal.show();
+}
+
 function validateDateTime(event) {
     var dateVal = document.getElementById("activityDateInput").value;
     var timeVal = document.getElementById("activityTimeInput").value;
     var alertMsg = document.getElementById("futureAlertMsg");
+    var semesterAlertMsg = document.getElementById("semesterAlertMsg");
+
+    if (alertMsg) alertMsg.classList.add("d-none");
+    if (semesterAlertMsg) semesterAlertMsg.classList.add("d-none");
+
     if (!dateVal || !timeVal) return true;
+
+    // Check semester bounds first
+    var semStart = "<%= semesterStart %>";
+    var semEnd = "<%= semesterEnd %>";
+    if (semStart && dateVal < semStart) {
+        if (semesterAlertMsg) semesterAlertMsg.classList.remove("d-none");
+        event.preventDefault();
+        return false;
+    }
+    if (semEnd && dateVal > semEnd) {
+        if (semesterAlertMsg) semesterAlertMsg.classList.remove("d-none");
+        event.preventDefault();
+        return false;
+    }
 
     // selected date time
     var selectedDateTime = new Date(dateVal + 'T' + timeVal);
@@ -302,9 +357,6 @@ function validateDateTime(event) {
         }
         event.preventDefault();
         return false;
-    }
-    if (alertMsg) {
-        alertMsg.classList.add("d-none");
     }
     return true;
 }
@@ -343,6 +395,10 @@ document.addEventListener("DOMContentLoaded", function() {
             var alertMsg = document.getElementById("futureAlertMsg");
             if (alertMsg) {
                 alertMsg.classList.add("d-none");
+            }
+            var semAlertMsg = document.getElementById("semesterAlertMsg");
+            if (semAlertMsg) {
+                semAlertMsg.classList.add("d-none");
             }
             var imgAlert = document.getElementById("imageAlertMsg");
             if (imgAlert) {
