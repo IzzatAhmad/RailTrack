@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" %>
 <%
     // Set Cache-Control headers to prevent browser caching of the landing/login check page
     response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1
@@ -92,6 +92,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com"/>
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+
         <style>
             :root {
                 --rt-primary:    #2563eb;
@@ -172,120 +173,223 @@
                 flex: 1;
             }
 
-            /* ── Hero ── */
+            /* ── Hero 3D ── */
             .hero {
-                background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #1d4ed8 100%);
-                color: #fff;
-                padding: 5rem 1.5rem 4rem;
-                text-align: center;
                 position: relative;
+                width: 100%;
+                height: 100vh;
+                min-height: 600px;
                 overflow: hidden;
+                color: #fff;
             }
-            .hero::before {
-                content: '';
+            #railtrack-canvas {
                 position: absolute;
                 inset: 0;
-                background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+                width: 100% !important;
+                height: 100% !important;
+                display: block;
+            }
+            .hero-overlay {
+                position: absolute;
+                inset: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                padding: 2rem 1.5rem;
+                pointer-events: none;
+                z-index: 2;
+            }
+            .hero-glass {
+                background: rgba(10, 18, 42, 0.55);
+                backdrop-filter: blur(18px) saturate(150%);
+                -webkit-backdrop-filter: blur(18px) saturate(150%);
+                border: 1px solid rgba(255,255,255,0.12);
+                border-radius: 24px;
+                padding: 2.8rem 3rem;
+                max-width: 680px;
+                width: 100%;
+                box-shadow: 0 32px 80px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
+                pointer-events: all;
             }
             .hero-badge {
                 display: inline-flex;
                 align-items: center;
                 gap: .4rem;
-                background: rgba(255,255,255,.12);
-                border: 1px solid rgba(255,255,255,.2);
+                background: rgba(96,165,250,.18);
+                border: 1px solid rgba(96,165,250,.35);
                 border-radius: 999px;
-                padding: .3rem .9rem;
-                font-size: .75rem;
-                font-weight: 600;
-                letter-spacing: .05em;
+                padding: .35rem 1rem;
+                font-size: .72rem;
+                font-weight: 700;
+                letter-spacing: .1em;
                 text-transform: uppercase;
                 margin-bottom: 1.5rem;
                 color: #93c5fd;
+                animation: fadeSlideUp .8s ease both;
             }
             .hero h1 {
-                font-size: clamp(2.2rem, 5vw, 3.5rem);
+                font-size: clamp(2rem, 4.5vw, 3.2rem);
                 font-weight: 700;
                 letter-spacing: -.03em;
                 line-height: 1.15;
-                margin-bottom: 1.25rem;
+                margin-bottom: 1.1rem;
+                animation: fadeSlideUp .9s .1s ease both;
+                color: #fff;
             }
             .hero h1 span {
-                color: #60a5fa;
+                background: linear-gradient(90deg, #60a5fa, #a78bfa);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
             }
             .hero p {
-                font-size: 1.1rem;
+                font-size: 1rem;
                 color: #bfdbfe;
-                max-width: 560px;
-                margin: 0 auto 2.5rem;
+                max-width: 480px;
+                margin: 0 auto 2rem;
                 line-height: 1.7;
+                animation: fadeSlideUp 1s .2s ease both;
             }
             .hero-cta {
                 display: flex;
                 gap: 1rem;
                 justify-content: center;
                 flex-wrap: wrap;
+                animation: fadeSlideUp 1s .3s ease both;
             }
             .btn-hero-primary {
-                background: #fff;
-                color: var(--rt-primary);
+                background: linear-gradient(135deg, #2563eb, #7c3aed);
+                color: #fff;
                 font-weight: 600;
                 font-size: .95rem;
                 padding: .75rem 2rem;
-                border-radius: 8px;
+                border-radius: 10px;
                 border: none;
                 text-decoration: none;
-                transition: all .2s;
+                transition: all .25s;
                 display: inline-flex;
                 align-items: center;
-                gap: .4rem;
+                gap: .45rem;
                 cursor: pointer;
+                box-shadow: 0 4px 24px rgba(37,99,235,.45);
             }
             .btn-hero-primary:hover {
-                background: #eff6ff;
-                color: var(--rt-primary-dk);
-                transform: translateY(-1px);
-                box-shadow: 0 4px 16px rgba(0,0,0,.2);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 32px rgba(37,99,235,.6);
+                filter: brightness(1.1);
             }
             .btn-hero-outline {
-                background: transparent;
+                background: rgba(255,255,255,.08);
                 color: #fff;
                 font-weight: 500;
                 font-size: .95rem;
                 padding: .75rem 2rem;
-                border-radius: 8px;
-                border: 1px solid rgba(255,255,255,.35);
+                border-radius: 10px;
+                border: 1px solid rgba(255,255,255,.28);
                 text-decoration: none;
-                transition: all .2s;
+                transition: all .25s;
                 display: inline-flex;
                 align-items: center;
-                gap: .4rem;
+                gap: .45rem;
             }
             .btn-hero-outline:hover {
-                background: rgba(255,255,255,.1);
+                background: rgba(255,255,255,.16);
                 color: #fff;
-                border-color: rgba(255,255,255,.6);
+                border-color: rgba(255,255,255,.5);
+                transform: translateY(-2px);
             }
             .hero-stats {
                 display: flex;
                 justify-content: center;
-                gap: 3rem;
-                margin-top: 3.5rem;
+                gap: 2.5rem;
+                margin-top: 2rem;
                 flex-wrap: wrap;
+                animation: fadeSlideUp 1s .4s ease both;
             }
             .hero-stat {
                 text-align: center;
             }
             .hero-stat .num {
-                font-size: 2rem;
+                font-size: 1.8rem;
                 font-weight: 700;
                 color: #fff;
                 line-height: 1;
             }
             .hero-stat .lbl {
-                font-size: .75rem;
+                font-size: .7rem;
                 color: #93c5fd;
-                margin-top: .25rem;
+                margin-top: .2rem;
                 font-weight: 500;
+                letter-spacing: .04em;
+                text-transform: uppercase;
+            }
+            /* scroll hint */
+            .scroll-hint {
+                position: absolute;
+                bottom: 2rem;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: .4rem;
+                color: rgba(255,255,255,.5);
+                font-size: .7rem;
+                font-weight: 600;
+                letter-spacing: .12em;
+                text-transform: uppercase;
+                animation: fadeIn 1.5s 1s ease both;
+                pointer-events: none;
+                z-index: 3;
+            }
+            .scroll-hint .wheel {
+                width: 22px;
+                height: 36px;
+                border: 2px solid rgba(255,255,255,.35);
+                border-radius: 11px;
+                position: relative;
+            }
+            .scroll-hint .wheel::after {
+                content: '';
+                position: absolute;
+                top: 5px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 3px;
+                height: 7px;
+                background: rgba(255,255,255,.6);
+                border-radius: 2px;
+                animation: scrollDot 1.6s ease infinite;
+            }
+            @keyframes scrollDot {
+                0%   { opacity: 1; top: 5px; }
+                100% { opacity: 0; top: 18px; }
+            }
+            @keyframes fadeSlideUp {
+                from { opacity: 0; transform: translateY(24px); }
+                to   { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to   { opacity: 1; }
+            }
+            @media (max-width: 576px) {
+                .hero-glass {
+                    padding: 2rem 1.5rem;
+                    border-radius: 18px;
+                }
+                .hero-stats { gap: 1.5rem; }
+                .rt-nav {
+                    padding: 0 1rem;
+                }
+                .rt-nav-links {
+                    display: none;
+                }
+                .section {
+                    padding: 3.5rem 1rem;
+                }
             }
 
             /* ── Sections ── */
@@ -612,23 +716,6 @@
                 background: var(--rt-primary-dk);
             }
 
-            @media (max-width: 576px) {
-                .rt-nav {
-                    padding: 0 1rem;
-                }
-                .rt-nav-links {
-                    display: none;
-                }
-                .hero {
-                    padding: 3.5rem 1rem 3rem;
-                }
-                .hero-stats {
-                    gap: 2rem;
-                }
-                .section {
-                    padding: 3.5rem 1rem;
-                }
-            }
         </style>
     </head>
     <body>
@@ -675,28 +762,40 @@
             </div>
         </div>
 
-        <!-- ── Hero ── -->
-        <section class="hero">
-            <div style="position:relative;z-index:1;">
-                <div class="hero-badge">
-                    <i class="bi bi-train-front-fill"></i> Built for Universities
+        <!-- ── Hero 3D ── -->
+        <section class="hero" id="hero3d">
+            <!-- Three.js canvas -->
+            <canvas id="railtrack-canvas"></canvas>
+
+            <!-- Glassmorphic overlay -->
+            <div class="hero-overlay">
+                <div class="hero-glass">
+                    <div class="hero-badge">
+                        <i class="bi bi-train-front-fill"></i>&nbsp; RailTrack · Built for Universities
+                    </div>
+                    <h1>Manage Your <span>Final Year Projects</span><br>The Smart Way</h1>
+                    <p>RailTrack brings students, supervisors, and coordinators onto one platform — with milestone tracking, Docker deployments, and real-time feedback.</p>
+                    <div class="hero-cta">
+                        <button onclick="openLogin()" class="btn-hero-primary">
+                            <i class="bi bi-box-arrow-in-right"></i> Get Started
+                        </button>
+                        <a href="#solution" class="btn-hero-outline">
+                            <i class="bi bi-chevron-double-down"></i> Learn More
+                        </a>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="hero-stat"><div class="num">3</div><div class="lbl">User Roles</div></div>
+                        <div class="hero-stat"><div class="num">100%</div><div class="lbl">Web-Based</div></div>
+                        <div class="hero-stat"><div class="num">Live</div><div class="lbl">Docker</div></div>
+                        <div class="hero-stat"><div class="num">Real-time</div><div class="lbl">Feedback</div></div>
+                    </div>
                 </div>
-                <h1>Manage Your <span>Final Year Projects</span><br>The Smart Way</h1>
-                <p>RailTrack brings students, supervisors, and coordinators onto one platform — with milestone tracking, Docker deployments, and real-time feedback.</p>
-                <div class="hero-cta">
-                    <button onclick="openLogin()" class="btn-hero-primary">
-                        <i class="bi bi-box-arrow-in-right"></i> Get Started
-                    </button>
-                    <a href="#solution" class="btn-hero-outline">
-                        <i class="bi bi-play-circle"></i> Learn More
-                    </a>
-                </div>
-                <div class="hero-stats">
-                    <div class="hero-stat"><div class="num">3</div><div class="lbl">User Roles</div></div>
-                    <div class="hero-stat"><div class="num">100%</div><div class="lbl">Web-Based</div></div>
-                    <div class="hero-stat"><div class="num">Live</div><div class="lbl">Docker Deployments</div></div>
-                    <div class="hero-stat"><div class="num">Real-time</div><div class="lbl">Feedback</div></div>
-                </div>
+            </div>
+
+            <!-- Scroll cue -->
+            <div class="scroll-hint">
+                <div class="wheel"></div>
+                Scroll to drive
             </div>
         </section>
 
@@ -1291,6 +1390,357 @@
         </div>        
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+        <!-- ══════════════════════════════════════════════════════════════
+             Pure WebGL Ray-Marching Railway Scene  (no external libraries)
+        ══════════════════════════════════════════════════════════════════ -->
+        <script>
+        (function () {
+            'use strict';
+
+            document.addEventListener('DOMContentLoaded', initWebGL);
+
+            // ─────────────────────────────────────────────────────────────
+            //  GLSL shaders
+            // ─────────────────────────────────────────────────────────────
+            var VS = [
+                'attribute vec2 a_pos;',
+                'void main(){gl_Position=vec4(a_pos,0.0,1.0);}'
+            ].join('\n');
+
+            var FS = [
+                'precision highp float;',
+                'uniform vec2  u_res;',
+                'uniform float u_time;',
+                'uniform float u_camZ;',
+                'uniform vec2  u_mouse;',
+
+                // ── utility ──────────────────────────────────────────────
+                'float hash(vec2 p){',
+                '    p=fract(p*vec2(127.1,311.7));',
+                '    p+=dot(p,p+19.19);',
+                '    return fract(p.x*p.y);',
+                '}',
+                'float vnoise(vec2 p){',
+                '    vec2 i=floor(p),f=fract(p);',
+                '    f=f*f*(3.0-2.0*f);',
+                '    return mix(',
+                '        mix(hash(i),hash(i+vec2(1,0)),f.x),',
+                '        mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);',
+                '}',
+
+                // ── track path (smooth S-curves along +Z) ─────────────
+                'float trkX(float z){return sin(z*0.065)*6.0+sin(z*0.021)*11.0;}',
+                'float trkXd(float z){return cos(z*0.065)*0.39+cos(z*0.021)*0.231;}',
+
+                // ── SDF helpers ──────────────────────────────────────────
+                'float sdBox2D(vec2 p,vec2 b){',
+                '    vec2 q=abs(p)-b;',
+                '    return length(max(q,0.0))+min(max(q.x,q.y),0.0);',
+                '}',
+                'float sdBox(vec3 p,vec3 b){',
+                '    vec3 q=abs(p)-b;',
+                '    return length(max(q,0.0))+min(max(q.x,max(q.y,q.z)),0.0);',
+                '}',
+
+                // ── scene SDF  matID: 0=ground 1=sleeper 2=rail 3=ballast
+                'vec2 scene(vec3 p){',
+                '    float d=1e6,m=0.0;',
+                '    float cx=trkX(p.z);',
+                '    float lx=p.x-cx;',
+                // ground
+                '    float gd=p.y+0.55;',
+                '    if(gd<d){d=gd;m=0.0;}',
+                // ballast bed (infinite prism, follows curve in X)
+                '    float ba=sdBox2D(vec2(lx,p.y+0.40),vec2(1.45,0.16));',
+                '    if(ba<d){d=ba;m=3.0;}',
+                // sleepers – periodic Z repetition
+                '    float SP=1.25;',
+                '    float sz=mod(p.z+SP*0.5,SP)-SP*0.5;',
+                '    float slCX=trkX(p.z-sz);',
+                '    float sl=sdBox(vec3(p.x-slCX,p.y+0.265,sz),vec3(1.22,0.058,0.135));',
+                '    if(sl<d){d=sl;m=1.0;}',
+                // rails – infinite cylinders along Z, offset ±0.725 in local X
+                '    float RO=0.725,RR=0.042;',
+                '    float rl=length(vec2(lx+RO,p.y+0.21))-RR;',
+                '    float rr=length(vec2(lx-RO,p.y+0.21))-RR;',
+                '    float rail=min(rl,rr);',
+                '    if(rail<d){d=rail;m=2.0;}',
+                '    return vec2(d,m);',
+                '}',
+
+                // ── gradient normal ───────────────────────────────────────
+                'vec3 calcNorm(vec3 p){',
+                '    float E=0.001;',
+                '    return normalize(vec3(',
+                '        scene(p+vec3(E,0,0)).x-scene(p-vec3(E,0,0)).x,',
+                '        scene(p+vec3(0,E,0)).x-scene(p-vec3(0,E,0)).x,',
+                '        scene(p+vec3(0,0,E)).x-scene(p-vec3(0,0,E)).x));',
+                '}',
+
+                // ── star field ────────────────────────────────────────────
+                'float stars(vec3 dir){',
+                '    vec2 uv=vec2(atan(dir.z,dir.x)*7.16,dir.y*15.92);',
+                '    float h=hash(floor(uv*1.5));',
+                '    float h2=fract(h*23.7);',
+                '    if(h2>0.975){',
+                '        float b=(h2-0.975)/0.025;',
+                '        return b*b*(0.65+0.35*sin(u_time*1.8+h*6.283));',
+                '    }',
+                '    return 0.0;',
+                '}',
+
+                // ── sky ───────────────────────────────────────────────────
+                'vec3 sky(vec3 dir){',
+                '    dir=normalize(dir);',
+                '    float t=clamp(dir.y*0.7+0.3,0.0,1.0);',
+                '    vec3 c=mix(vec3(0.06,0.12,0.30),vec3(0.004,0.008,0.04),pow(t,0.55));',
+                // city glow forward (+Z)
+                '    float cg=pow(clamp(dir.z,0.0,1.0),5.0)*clamp(1.0-abs(dir.y)*4.0,0.0,1.0);',
+                '    c+=vec3(0.10,0.22,1.0)*cg*3.2;',
+                // violet side glow
+                '    float vg=pow(clamp(dir.x*0.5+0.5,0.0,1.0),12.0)*clamp(1.0-dir.y*3.0,0.0,1.0);',
+                '    c+=vec3(0.28,0.04,0.60)*vg*0.7;',
+                // stars (upper hemisphere)
+                '    if(dir.y>-0.1) c+=vec3(0.80,0.88,1.0)*stars(dir);',
+                '    return c;',
+                '}',
+
+                // ── shading ───────────────────────────────────────────────
+                'vec3 shade(vec3 pos,vec3 rd,float mat){',
+                '    vec3 n=calcNorm(pos);',
+                '    vec3 ld=normalize(vec3(0.2,-1.0,0.5));',
+                '    float diff=max(dot(n,-ld),0.0);',
+                '    float cx=trkX(pos.z);',
+                '    float lx=pos.x-cx;',
+                '    vec3 col=vec3(0.0);',
+                '    if(mat<0.5){',
+                // ground
+                '        float nv=vnoise(pos.xz*0.4)*0.5+vnoise(pos.xz*1.2)*0.35+vnoise(pos.xz*4.0)*0.15;',
+                '        col=mix(vec3(0.022,0.038,0.068),vec3(0.07,0.09,0.14),nv);',
+                '        col*=0.2+0.8*diff;',
+                // wet ground reflection of rails
+                '        float rd2=min(abs(lx-0.725),abs(lx+0.725));',
+                '        col+=vec3(0.04,0.18,0.9)*exp(-rd2*1.9)*0.22;',
+                '    } else if(mat<1.5){',
+                // sleeper
+                '        float wg=vnoise(pos.xz*2.5)*0.4+vnoise(pos.xz*6.0)*0.2;',
+                '        col=mix(vec3(0.09,0.055,0.03),vec3(0.19,0.115,0.065),wg);',
+                '        col*=0.15+0.85*diff;',
+                '    } else if(mat<2.5){',
+                // rail – polished steel + emissive blue glow
+                '        vec3 h2=normalize(-ld+(-rd));',
+                '        float spec=pow(max(dot(n,h2),0.0),80.0);',
+                '        col=vec3(0.28,0.38,0.58)*(0.3+0.7*diff)+vec3(1.0)*spec*1.5;',
+                '        col+=vec3(0.06,0.22,1.00)*1.3;',
+                '    } else {',
+                // ballast
+                '        float gv=vnoise(pos.xz*2.8)*0.35+vnoise(pos.xz*7.0)*0.15;',
+                '        col=mix(vec3(0.06,0.07,0.10),vec3(0.12,0.13,0.17),gv);',
+                '        col*=0.2+0.8*diff;',
+                '    }',
+                '    return col;',
+                '}',
+
+                // ── ray marcher ───────────────────────────────────────────
+                'vec3 raymarch(vec3 ro,vec3 rd){',
+                '    float t=0.04,hitMat=-1.0;',
+                '    for(int i=0;i<80;i++){',
+                '        vec3 p=ro+rd*t;',
+                '        vec2 res=scene(p);',
+                '        if(res.x<0.0015*t){hitMat=res.y;break;}',
+                '        t+=res.x*0.88;',
+                '        if(t>115.0) break;',
+                '    }',
+                '    if(hitMat<0.0) return sky(rd);',
+                '    vec3 pos=ro+rd*t;',
+                '    vec3 col=shade(pos,rd,hitMat);',
+                // volumetric rail glow – march along ray, accumulate proximity to rails
+                '    float glow=0.0,gt=0.2;',
+                '    for(int j=0;j<28;j++){',
+                '        vec3 gp=ro+rd*gt;',
+                '        float gcx=trkX(gp.z);',
+                '        float glx=gp.x-gcx;',
+                '        float nr=min(length(vec2(glx+0.725,gp.y+0.21)),length(vec2(glx-0.725,gp.y+0.21)));',
+                '        glow+=1.0/(nr*nr*90.0+1.0);',
+                '        gt+=2.0;',
+                '        if(gt>t) break;',
+                '    }',
+                '    col+=vec3(0.04,0.20,1.0)*glow*0.022;',
+                // exponential atmosphere fog
+                '    float ff=1.0-exp(-t*0.017);',
+                '    col=mix(col,sky(rd)*0.6+vec3(0.02,0.04,0.14)*0.4,ff);',
+                '    return col;',
+                '}',
+
+                // ── main ──────────────────────────────────────────────────
+                'void main(){',
+                '    vec2 uv=(gl_FragCoord.xy-u_res*0.5)/u_res.y;',
+                '    float cz=u_camZ;',
+                '    float cx=trkX(cz);',
+                '    float cxd=trkXd(cz);',
+                // camera – eye position follows track curve, mouse adds lateral tilt
+                '    vec3 ro=vec3(cx+u_mouse.x*1.2,1.88,cz);',
+                '    vec3 fwd=normalize(vec3(cxd,-0.065+u_mouse.y*0.12,1.0));',
+                '    vec3 right=normalize(cross(fwd,vec3(0.0,1.0,0.0)));',
+                '    vec3 up=cross(right,fwd);',
+                '    vec3 rd=normalize(fwd+right*uv.x*0.82+up*uv.y*0.82);',
+                '    vec3 col=raymarch(ro,rd);',
+                // ACES tone mapping
+                '    col=(col*(2.51*col+0.03))/(col*(2.43*col+0.59)+0.14);',
+                // gamma
+                '    col=pow(clamp(col,0.0,1.0),vec3(0.4545));',
+                // vignette
+                '    float vig=dot(uv,uv);',
+                '    col*=1.0-vig*0.44;',
+                // subtle film grain
+                '    float grain=(hash(gl_FragCoord.xy+vec2(u_time*137.0,u_time*89.0))-0.5)*0.028;',
+                '    col=clamp(col+grain,0.0,1.0);',
+                // speed-streak blur hint at edges
+                '    float streak=pow(abs(uv.x)*1.6,3.5)*0.14;',
+                '    col=mix(col,col*0.45,streak);',
+                '    gl_FragColor=vec4(col,1.0);',
+                '}'
+            ].join('\n');
+
+            // ─────────────────────────────────────────────────────────────
+            //  WebGL bootstrap
+            // ─────────────────────────────────────────────────────────────
+            function initWebGL() {
+                var canvas = document.getElementById('railtrack-canvas');
+                if (!canvas) return;
+
+                var gl = canvas.getContext('webgl') ||
+                         canvas.getContext('experimental-webgl');
+                if (!gl) {
+                    console.warn('WebGL unavailable – falling back to gradient.');
+                    canvas.style.background = 'linear-gradient(135deg,#050a18 0%,#1e3a8a 60%,#2563eb 100%)';
+                    return;
+                }
+
+                function makeShader(type, src) {
+                    var s = gl.createShader(type);
+                    gl.shaderSource(s, src);
+                    gl.compileShader(s);
+                    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+                        console.error('Shader compile error:', gl.getShaderInfoLog(s));
+                        return null;
+                    }
+                    return s;
+                }
+
+                var vs = makeShader(gl.VERTEX_SHADER,   VS);
+                var fs = makeShader(gl.FRAGMENT_SHADER, FS);
+                if (!vs || !fs) return;
+
+                var prog = gl.createProgram();
+                gl.attachShader(prog, vs);
+                gl.attachShader(prog, fs);
+                gl.linkProgram(prog);
+                if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+                    console.error('Shader link error:', gl.getProgramInfoLog(prog));
+                    return;
+                }
+                gl.useProgram(prog);
+
+                // Fullscreen triangle-strip quad  (-1,-1) → (1,1)
+                var quadBuf = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+                gl.bufferData(gl.ARRAY_BUFFER,
+                    new Float32Array([-1,-1, 1,-1, -1,1, 1,1]),
+                    gl.STATIC_DRAW);
+                var aPos = gl.getAttribLocation(prog, 'a_pos');
+                gl.enableVertexAttribArray(aPos);
+                gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+                // Uniform locations
+                var uRes   = gl.getUniformLocation(prog, 'u_res');
+                var uTime  = gl.getUniformLocation(prog, 'u_time');
+                var uCamZ  = gl.getUniformLocation(prog, 'u_camZ');
+                var uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+                // ── State ──────────────────────────────────────────────
+                var autoZ    = 0.0;   // continuous auto-advance
+                var scrollZ  = 0.0;   // scroll contribution
+                var camZ     = 0.0;   // smoothed camera Z
+                var mouseX   = 0.0;
+                var mouseY   = 0.0;
+                var lastMs   = performance.now();
+                var startMs  = performance.now();
+                var active   = true;
+                var rafId    = null;
+
+                // Scroll → additional track progress
+                window.addEventListener('scroll', function () {
+                    scrollZ = window.scrollY * 0.10;  // 0.1 units per px
+                }, { passive: true });
+
+                // Mouse parallax
+                window.addEventListener('mousemove', function (e) {
+                    mouseX = (e.clientX / window.innerWidth  - 0.5) * 2.0;
+                    mouseY = (e.clientY / window.innerHeight - 0.5) * 2.0;
+                });
+                window.addEventListener('touchmove', function (e) {
+                    if (e.touches.length) {
+                        mouseX = (e.touches[0].clientX / window.innerWidth  - 0.5) * 2.0;
+                        mouseY = (e.touches[0].clientY / window.innerHeight - 0.5) * 2.0;
+                    }
+                }, { passive: true });
+
+                // Resize – keep canvas pixel size matching CSS size
+                function resize() {
+                    var w = canvas.offsetWidth  || window.innerWidth;
+                    var h = canvas.offsetHeight || window.innerHeight;
+                    if (canvas.width !== w || canvas.height !== h) {
+                        canvas.width  = w;
+                        canvas.height = h;
+                        gl.viewport(0, 0, w, h);
+                    }
+                }
+                window.addEventListener('resize', resize);
+                resize();
+
+                // ── Render loop ────────────────────────────────────────
+                function render() {
+                    if (!active) { rafId = null; return; }
+                    rafId = requestAnimationFrame(render);
+
+                    var now = performance.now();
+                    var dt  = Math.min((now - lastMs) * 0.001, 0.05);
+                    lastMs  = now;
+                    var elapsed = (now - startMs) * 0.001;
+
+                    // Auto-advance (3 units/sec) + scroll boost
+                    autoZ += dt * 3.0;
+                    var targetZ = autoZ + scrollZ;
+                    // Exponential smooth follow
+                    camZ += (targetZ - camZ) * (1.0 - Math.exp(-dt * 4.0));
+
+                    resize();
+
+                    gl.uniform2f(uRes,   canvas.width, canvas.height);
+                    gl.uniform1f(uTime,  elapsed);
+                    gl.uniform1f(uCamZ,  camZ);
+                    gl.uniform2f(uMouse, mouseX * 0.5, -mouseY * 0.5);
+
+                    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+                }
+
+                // Pause when not visible
+                var obs = new IntersectionObserver(function (entries) {
+                    active = entries[0].isIntersecting;
+                    if (active && !rafId) {
+                        lastMs = performance.now();
+                        render();
+                    }
+                }, { threshold: 0 });
+                obs.observe(canvas);
+
+                render();
+            }
+        })();
+        </script>
+
         <script>
                         var regOverlay = document.getElementById('registerOverlay');
                         var regModal = document.getElementById('registerModal');
